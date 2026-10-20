@@ -257,3 +257,53 @@ def test_serve_reconnects_vision_after_framing_loss():
         srv.run(duration=0.35 + 0.02 * k)
     assert srv.runtime.vision_guard.accepted > before        # fresh connection, framing restored
     fake.stop(); srv.close(); pub.close()
+
+
+class _Raising:
+    def __init__(self, after: float, what: str):
+        self.after, self.what = after, what
+
+    def poll(self, now):
+        if now > self.after:
+            raise RuntimeError(f"{self.what} decode error")
+        return None
+
+    def read(self, now):
+        if self.what == "vision":
+            raise OSError("vision socket exploded")
+        return b""
+
+    def close(self):
+        pass
+
+
+@pytest.mark.parametrize("which", ["pose", "joystick", "vision"])
+def test_serve_input_exception_is_a_fail_stop(which):
+    """An exception in any input (a future NatNet/joystick reader, the vision
+    socket) must stop the loop with a reason and disconnect the Commander,
+    never escape run()."""
+    pub, fake, srv = _server(Mode.MONITOR)
+    assert fake.connected.wait(3)
+    if which == "pose":
+        srv.pose = _Raising(0.05, "natnet")
+    elif which == "joystick":
+        srv.joystick = _Raising(0.05, "joystick")
+    st = srv.run(duration=0.1)
+    if which == "vision":
+        srv.vision = _Raising(0.0, "vision")
+        st = srv.run(duration=0.2)
+    assert st.stopped_reason is not None and st.stopped_reason.startswith("input: ")
+    assert {"pose": "natnet", "joystick": "joystick", "vision": "vision"}[which] in st.stopped_reason
+    assert srv.commander.state == 0.0 and srv.commander.client is None
+    assert srv.run(duration=1.0).ticks == st.ticks                     # latched: does not resume
+    fake.stop(); srv.close(); pub.close()
+
+
+def test_serve_does_not_busy_spin():
+    """Hybrid sleep: well under one core while keeping 1 kHz model time."""
+    srv = MissionServer(DEFAULT, Mode.DRY_RUN, VisionClient(port=1), CommanderServer("127.0.0.1", 0))
+    st = srv.run(duration=1.0)
+    srv.close()
+    assert st.ticks == 1000 and st.stopped_reason is None
+    assert st.cpu_s < 0.6 * st.wall_s, (st.cpu_s, st.wall_s)
+    assert st.lag_p50_s < 0.001
