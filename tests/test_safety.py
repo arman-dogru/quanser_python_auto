@@ -414,16 +414,35 @@ def test_measured_pose_outside_the_flight_area_is_not_the_hold(outputs):
     (more than the 0.25 m overshoot allowance) is not trusted as a hold."""
     gate = OutputGate(DEFAULT, Mode.MONITOR)
     o = dataclasses.replace(outputs, measured_pose=(1.48, 0.0, 0.7, 0.0), is_tracking=1.0)
-    gate.step(dataclasses.replace(o, desired_pose=(1.2, 0.0, 0.7, 0.0)))
+    gate.step(dataclasses.replace(o, desired_pose=(1.0, 0.2, 0.7, 0.0)))
     dec = gate.step(dataclasses.replace(o, measured_pose=(1.5, 0.0, 0.7, 0.0), centering_active=True,
                                         desired_pose=(-1.2, -1.0, 0.7, 0.0)))
-    assert dec.faults == ["centering-entry-jump"] and dec.packet.desired_pose[:2] == (1.2, 0.0)
+    assert dec.faults == ["centering-entry-jump"] and dec.packet.desired_pose[:2] == (1.0, 0.2)   # last accepted
     gate = OutputGate(DEFAULT, Mode.MONITOR)                                        # inside the allowance: trusted
     o = dataclasses.replace(o, measured_pose=(1.38, 0.0, 0.7, 0.0))
     gate.step(dataclasses.replace(o, desired_pose=(1.2, 0.0, 0.7, 0.0)))
     dec = gate.step(dataclasses.replace(o, measured_pose=(1.4, 0.0, 0.7, 0.0), centering_active=True,
                                         desired_pose=(-1.2, -1.0, 0.7, 0.0)))
-    assert dec.packet.desired_pose[:2] == (1.4, 0.0)
+    assert dec.packet.desired_pose[:2] == (1.2, 0.0)                               # ... but clamped to the area
+
+
+@pytest.mark.parametrize("measured,hold", [
+    ((1.449, 0.0), (1.2, 0.0)), ((-1.449, 0.0), (-1.2, 0.0)), ((0.3, 1.249), (0.3, 1.0)),
+    ((0.3, -1.249), (0.3, -1.0)), ((1.3, -1.1), (1.2, -1.0)), ((0.4, -0.2), (0.4, -0.2)),
+])
+def test_entry_hold_command_is_clamped_to_the_flight_area(outputs, measured, hold):
+    """A sample within the 0.25 m overshoot allowance is trusted as where the
+    vehicle is, but the hold sent to the Commander never leaves the flight
+    area (AutonomousConfig.x_limits / y_limits)."""
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    m = (*measured, 0.7, 0.0)
+    o = dataclasses.replace(outputs, measured_pose=m, is_tracking=1.0)
+    gate.step(dataclasses.replace(o, desired_pose=(0.0, 0.0, 0.7, 0.0)))
+    for _ in range(3):
+        dec = gate.step(dataclasses.replace(o, centering_active=True, desired_pose=(-1.2, -1.0, 0.7, float("nan"))))
+        assert dec.faults == ["desired-non-finite"] and dec.packet.desired_pose[:2] == hold
+    (xl, xh), (yl, yh) = DEFAULT.auto.x_limits, DEFAULT.auto.y_limits
+    assert xl <= dec.packet.desired_pose[0] <= xh and yl <= dec.packet.desired_pose[1] <= yh
 
 
 def test_centring_origin_never_comes_from_an_untracked_pose(outputs):
@@ -474,6 +493,40 @@ def test_no_new_autonomous_land_while_centring_poses_are_refused(outputs):
     assert dec.status is GateStatus.CENTRING_REFUSED and not dec.autoland_applied and dec.packet.triggers[1] == 1.0
     dec = gate.step(land)                                                           # pose fine again: LAND starts
     assert dec.status is GateStatus.OK and dec.autoland_applied and dec.packet.triggers[1] == 0.0
+
+
+def test_disarm_mid_land_releases_takeoff_land(outputs):
+    """The gate keeps a LAND only while the operator keeps arm and takeoff:
+    disarming hands trigger 2 back to the operator, during a fault too."""
+    for fault in (False, True):
+        gate = OutputGate(DEFAULT, Mode.AUTOLAND)
+        land = _landing(gate, outputs)
+        assert gate.step(land).autoland_applied
+        if fault:
+            bad = dataclasses.replace(land, desired_pose=(math.nan, 0.0, 0.7, 0.0))
+            for _ in range(gate.escalate_ticks):
+                dec = gate.step(bad)
+            assert dec.status is GateStatus.CENTRING_FAULT and dec.packet.triggers[1] == 0.0
+            land = bad
+        disarm = dataclasses.replace(land, operator_triggers=(0., 1., 0., 0.), arbiter_triggers=(0., 0., 0., 0.))
+        dec = gate.step(disarm)
+        assert not dec.autoland_applied and not gate.land_active
+        assert dec.packet.triggers == (0.0, 1.0, 0.0, 0.0), fault
+
+
+def test_last_accepted_centring_pose_is_reset_when_centring_ends(outputs):
+    """A new centring phase starts with the entry rule (0.5 m from the
+    vehicle), not the 5 mm step from the previous phase's last pose."""
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    _centring_at(gate, outputs, (0.0, 0.0, 0.7, 0.0))
+    B = (0.3, 0.0, 0.7, 0.0)
+    o = dataclasses.replace(outputs, measured_pose=B, is_tracking=1.0)
+    for k in range(1, 4):                                                           # centring ends, vehicle moves
+        m = (0.1 * k, 0.0, 0.7, 0.0)
+        assert not gate.step(dataclasses.replace(o, measured_pose=m, desired_pose=m)).faults
+    assert gate.centring_last is None
+    dec = gate.step(dataclasses.replace(o, centering_active=True, desired_pose=(0.31, 0.0, 0.7, 0.0)))
+    assert not dec.faults and dec.status is GateStatus.OK and dec.packet.desired_pose[0] == 0.31
 
 
 def test_land_ends_when_the_arbiter_releases_it(outputs):

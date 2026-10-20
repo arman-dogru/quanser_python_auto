@@ -222,6 +222,9 @@ class OutputGate:
         self.mode = mode
         self.z_lo, self.z_hi = s.z_limits(m)
         (self.x_lo, self.x_hi), (self.y_lo, self.y_hi) = s.xy_limits(m)
+        # Flight area: the hold COMMAND is clamped to it; a measured sample is
+        # trusted up to hold_area_margin_m outside it (edge-waypoint overshoot).
+        (self.ax_lo, self.ax_hi), (self.ay_lo, self.ay_hi) = a.x_limits, a.y_limits
         g = s.hold_area_margin_m
         (self.fx_lo, self.fx_hi), (self.fy_lo, self.fy_hi) = ((a.x_limits[0] - g, a.x_limits[1] + g),
                                                               (a.y_limits[0] - g, a.y_limits[1] + g))
@@ -328,14 +331,18 @@ class OutputGate:
         if self.refusal_hold is None:
             xy = self._measured_xy(out)
             if xy is None:
-                return self.last_desired
+                return None              # the caller then sends the last accepted pose; retried next tick
             if self.last_desired is not None:
                 z, yaw = self.last_desired[2], self.last_desired[3]
             else:
                 mz, myaw = float(out.measured_pose[2]), float(out.measured_pose[3])
                 z = min(max(mz, self.z_lo), self.z_hi) if math.isfinite(mz) else self.z_hi
                 yaw = myaw if math.isfinite(myaw) else 0.0
-            self.refusal_hold = (xy[0], xy[1], z, yaw)
+            # Trusted up to the margin outside the flight area, but never
+            # commanded there: the hold itself is clamped to the flight area.
+            hx = min(max(xy[0], self.ax_lo), self.ax_hi)
+            hy = min(max(xy[1], self.ay_lo), self.ay_hi)
+            self.refusal_hold = (hx, hy, z, yaw)
         return self.refusal_hold
 
     def step(self, out: TickOutputs) -> GateDecision:

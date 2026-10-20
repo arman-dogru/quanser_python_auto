@@ -87,8 +87,11 @@ A refused centring pose is replaced by a hold:
 
 * after the first accepted centring pose of the phase: that last accepted
   centring pose, which passed every check above;
-* while the entry is still being refused: the plausible measured xy, with
-  the last accepted height and yaw, captured once on the first refused tick
+* while the entry is still being refused: the plausible measured xy,
+  clamped to the flight area (x -1.2..1.2 m, y -1.0..1.0 m, from
+  `AutonomousConfig`; the 0.25 m allowance only decides whether a sample
+  is trusted, it is never commanded), with the last accepted height and
+  yaw, captured once on the first refused tick
   and kept (not re-captured as the vehicle moves) until centring ends. While
   no plausible measured xy is available the last accepted pose is sent
   instead and the capture is retried on the next tick, so a single bad
@@ -104,8 +107,10 @@ Refusals are never silent:
   refusals (`SafetyConfig.centring_refusal_escalate_s`, 2000 ticks) the gate
   escalates to `status = "centring-fault"`: it logs an error, records the
   fault `centring-refusals-escalated` once (then `centring-fault-hold` on
-  each held tick), and holds. The fault is latched until centring ends (the
-  operator lands or disarms, or the mission aborts); an accepted pose does
+  each held tick), and holds. The fault is latched until centring ends. In
+  the model, centring ends only when the operator's Takeoff/Land input goes
+  low, either by the operator or because a joystick issue forces it low;
+  disarming or a descent abort alone does not end it. An accepted pose does
   not clear it.
 
 The step limit is kept strictly, so if the model's own pose drifts more

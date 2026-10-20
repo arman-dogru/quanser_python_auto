@@ -1,9 +1,9 @@
 {
  "sweep": "safety",
- "mutants": 93,
+ "mutants": 96,
  "summary": {
   "all": {
-   "killed": 90,
+   "killed": 93,
    "killed-error": 0,
    "timeout": 0,
    "survived": 3
@@ -19,7 +19,7 @@
   "rv-og-meas-none-tracking": "measured is None only if no finite measured pose was ever seen; that same tick took the non-finite branch, which already set tracking = 0.",
   "rv-rt-nonfinite-check": "Defence in depth: every packet field is finite after the OutputGate (desired and measured are finite-checked, triggers are 0/1, the timestamp is sanitised)."
  },
- "seconds": 57.0,
+ "seconds": 56.1,
  "results": [
   {
    "id": "pg-nan",
@@ -553,6 +553,24 @@
    "id": "og-disp-off",
    "file": "safety.py",
    "rule": "displacement limit",
+   "all": "killed"
+  },
+  {
+   "id": "og-land-overrides-disarm",
+   "file": "safety.py",
+   "rule": "disarming mid-LAND releases Takeoff/Land",
+   "all": "killed"
+  },
+  {
+   "id": "og-centring-last-not-reset",
+   "file": "safety.py",
+   "rule": "last accepted centring pose reset when centring ends",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-not-clamped",
+   "file": "safety.py",
+   "rule": "hold command clamped to the flight area",
    "all": "killed"
   },
   {
