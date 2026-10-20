@@ -184,6 +184,13 @@ def det_grid():
         tick(hover, takeoff=0.0, confirmed=0.0)
     for _ in range(5):                        # NaN hold pose: MATLAB min/max clamp NaN to the limit
         tick(hover, hold=(NAN, NAN, 0.7, 0.0), pad=(400.0, 330.0))
+    for _ in range(5):
+        tick(hover, takeoff=0.0, confirmed=0.0)
+    # Pixel error exactly at the 20 px tolerance (|e| = 20, second component
+    # 0, so both norms are exact): `<=` counts the tick as centred and holds.
+    edge = [0.1, 0.2, 0.70, 0.0]
+    for _ in range(3):
+        tick(edge, hold=tuple(edge), pad=(272.84542679563089, 237.16818064800853))
     return {"centring_edges": rows}
 
 
