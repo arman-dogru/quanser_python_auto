@@ -48,7 +48,7 @@ if exist(d, 'dir'), confirm_recursive_rmdir(false); rmdir(d, 's'); end
 end
 
 function Y = run_grid(f, X)
-Y = zeros(rows(X), 14);
+Y = zeros(rows(X), 13);
 for k = 1:rows(X)
   x = X(k,:);
   [d,wi,gc,vc,ca,ce,pe,ds,da] = f(x(1:4)', x(5:8)', x(9:12)', logical(x(13)), x(14:17)', ...

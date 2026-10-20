@@ -15,6 +15,10 @@ from dataclasses import dataclass
 
 import numpy as np
 
+VISION_PORT = 18901    # mission server "YOLO Observation TCP Client" uri; publisher --detection-port default
+COMMAND_PORT = 18001   # mission server URI_Follower; Commander Stream Client URI_Host
+FRAME_PORT = 18910     # Commander camera Stream Client; publisher --camera-port default
+
 # Vision publisher -> mission server, TCP 18901 (python/yolo_pad_writer_passive.py
 # LatestObservationServer.publish: struct.pack("<6d", ...)).
 VISION = struct.Struct("<6d")

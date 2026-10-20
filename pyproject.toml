@@ -37,3 +37,7 @@ extend-exclude = ["python", "matlab", "simulink", "working_grid_search_2026-08-1
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"tools/mutation_sweep.py" = ["E501"]   # mutant tables quote source lines verbatim
+"tests/*" = ["E702"]
