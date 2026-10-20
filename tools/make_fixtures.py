@@ -466,7 +466,7 @@ def main(argv=None) -> int:
 
 
 def _close(a: bytes, b: bytes, tol: float = 1e-12) -> bool:
-    from qdrone_autoland.parity import compare     # NaN == NaN, equal infinities, else max abs error
+    from qdrone_autoland.parity import compare  # NaN == NaN, equal infinities, else max abs error
     x = np.loadtxt(a.decode().splitlines(), delimiter=",", ndmin=2)
     y = np.loadtxt(b.decode().splitlines(), delimiter=",", ndmin=2)
     return compare(x, y) <= tol

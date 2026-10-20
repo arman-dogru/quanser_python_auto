@@ -1,17 +1,25 @@
 {
  "sweep": "safety",
- "mutants": 40,
+ "mutants": 66,
  "summary": {
   "all": {
-   "killed": 40,
+   "killed": 63,
    "killed-error": 0,
    "timeout": 0,
-   "survived": 0
+   "survived": 3
   }
  },
- "survivors": [],
- "equivalent": {},
- "seconds": 20.3,
+ "survivors": [
+  "rv-takeoff-not-gated",
+  "rv-og-meas-none-tracking",
+  "rv-rt-nonfinite-check"
+ ],
+ "equivalent": {
+  "rv-takeoff-not-gated": "The FrSKY mapping already computes takeoff = 0 from rz = -1 before the issue latches, and the mapping is held while the issue is set, so the held takeoff is already 0.",
+  "rv-og-meas-none-tracking": "measured is None only if no finite measured pose was ever seen; that same tick took the non-finite branch, which already set tracking = 0.",
+  "rv-rt-nonfinite-check": "Defence in depth: every packet field is finite after the OutputGate (desired and measured are finite-checked, triggers are 0/1, the timestamp is sanitised)."
+ },
+ "seconds": 58.5,
  "results": [
   {
    "id": "pg-nan",
@@ -251,6 +259,162 @@
    "id": "so-drain",
    "file": "io/sockets.py",
    "rule": "vision backlog drained",
+   "all": "killed"
+  },
+  {
+   "id": "rv-estop-hold-2s",
+   "file": "config.py",
+   "rule": "E-stop hold 0.2 s",
+   "all": "killed"
+  },
+  {
+   "id": "rv-estop-never-out",
+   "file": "blocks.py",
+   "rule": "E-stop reaches the triggers",
+   "all": "killed"
+  },
+  {
+   "id": "rv-issue-5-axes",
+   "file": "blocks.py",
+   "rule": "issue needs all six axes at -1",
+   "all": "killed"
+  },
+  {
+   "id": "rv-takeoff-not-gated",
+   "file": "blocks.py",
+   "rule": "takeoff masked by joystick issue",
+   "all": "survived"
+  },
+  {
+   "id": "rv-issue-threshold-2s",
+   "file": "config.py",
+   "rule": "joystick issue after 0.2 s",
+   "all": "killed"
+  },
+  {
+   "id": "rv-jg-stale-10x",
+   "file": "safety.py",
+   "rule": "joystick stale window",
+   "all": "killed"
+  },
+  {
+   "id": "rv-jg-malformed-keeps-last",
+   "file": "safety.py",
+   "rule": "malformed joystick forgets last good",
+   "all": "killed"
+  },
+  {
+   "id": "rv-pg-stale-10x",
+   "file": "safety.py",
+   "rule": "pose stale window",
+   "all": "killed"
+  },
+  {
+   "id": "rv-pg-tracking-forced",
+   "file": "safety.py",
+   "rule": "Motive tracking flag kept",
+   "all": "killed"
+  },
+  {
+   "id": "rv-vg-age-ignored",
+   "file": "safety.py",
+   "rule": "detection age used",
+   "all": "killed"
+  },
+  {
+   "id": "rv-vg-stale-2x",
+   "file": "safety.py",
+   "rule": "vision stale 0.5 s",
+   "all": "killed"
+  },
+  {
+   "id": "rv-vg-future-2x",
+   "file": "safety.py",
+   "rule": "future tolerance 50 ms",
+   "all": "killed"
+  },
+  {
+   "id": "rv-vg-frac-frame",
+   "file": "safety.py",
+   "rule": "fractional frame refused",
+   "all": "killed"
+  },
+  {
+   "id": "rv-og-step-10x",
+   "file": "safety.py",
+   "rule": "centring step 5 mm",
+   "all": "killed"
+  },
+  {
+   "id": "rv-og-disp-off",
+   "file": "safety.py",
+   "rule": "0.5 m displacement limit",
+   "all": "killed"
+  },
+  {
+   "id": "rv-og-none-tracking",
+   "file": "safety.py",
+   "rule": "nothing valid yet -> tracking 0",
+   "all": "killed"
+  },
+  {
+   "id": "rv-og-meas-none-tracking",
+   "file": "safety.py",
+   "rule": "no measured pose yet -> tracking 0",
+   "all": "survived"
+  },
+  {
+   "id": "rv-rt-nonfinite-check",
+   "file": "runtime.py",
+   "rule": "runtime re-checks finiteness",
+   "all": "survived"
+  },
+  {
+   "id": "rv-sv-maxlag-100x",
+   "file": "io/serve.py",
+   "rule": "overrun limit",
+   "all": "killed"
+  },
+  {
+   "id": "rv-so-state-always-2",
+   "file": "io/sockets.py",
+   "rule": "state 0 without a client",
+   "all": "killed"
+  },
+  {
+   "id": "rv-og-arbiter-fault-off",
+   "file": "safety.py",
+   "rule": "arbiter tampering flagged",
+   "all": "killed"
+  },
+  {
+   "id": "og-entry-jump",
+   "file": "safety.py",
+   "rule": "jump on centring entry refused",
+   "all": "killed"
+  },
+  {
+   "id": "og-origin-refused",
+   "file": "safety.py",
+   "rule": "refused entry pose is not the origin",
+   "all": "killed"
+  },
+  {
+   "id": "og-late-origin",
+   "file": "safety.py",
+   "rule": "first accepted centring pose becomes the origin",
+   "all": "killed"
+  },
+  {
+   "id": "sv-input-failstop",
+   "file": "io/serve.py",
+   "rule": "input exceptions fail-stop",
+   "all": "killed"
+  },
+  {
+   "id": "sv-no-busy-spin",
+   "file": "io/serve.py",
+   "rule": "hybrid sleep",
    "all": "killed"
   }
  ]

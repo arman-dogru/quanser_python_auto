@@ -1,11 +1,15 @@
 """Regenerate the README figures from real runs.
 
-* parity.png: Python vs Octave max abs error per block over every committed
-  fixture (plus ``outputs/scenario_parity`` when present: all eight SIL
-  scenarios, regenerated with ``make_fixtures.py --scenarios``).
+* parity.png: ticks compared against Octave per block, labelled with the
+  max |Python - Octave|, over every committed fixture plus the eight SIL
+  scenarios. The scenario fixtures need Octave
+  (``python tools/make_fixtures.py --scenarios outputs/scenario_parity``);
+  without them the scenario numbers recorded in ``data/parity.json`` are
+  reused, so a fresh clone rebuilds every figure without Octave.
 * nominal_mission.png: the nominal Phase 10 closed loop (top view + timeline).
 * safety_scenarios.png: height and trigger bits for every fault scenario.
-* mutation.png: both mutation sweeps (needs docs/figures/data/mutation_*.json).
+* mutation.png: both mutation sweeps (from the committed
+  docs/figures/data/mutation_*.json written by tools/mutation_sweep.py).
 
 Usage: ``python tools/make_figures.py`` (writes docs/figures/*.png and data/*.json).
 """
@@ -30,7 +34,8 @@ from qdrone_autoland.config import DEFAULT  # noqa: E402
 
 FIG = ROOT / "docs" / "figures"
 DATA = FIG / "data"
-plt.rcParams.update({"font.size": 8, "axes.titlesize": 9, "figure.dpi": 110, "savefig.dpi": 110})
+plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "legend.fontsize": 8, "figure.dpi": 110,
+                     "savefig.dpi": 110})
 
 
 def _load(p: Path) -> np.ndarray:
@@ -39,44 +44,50 @@ def _load(p: Path) -> np.ndarray:
     return parity.load_csv(p)
 
 
-def parity_figure() -> dict:
-    roots = [("committed", ROOT / "tests" / "fixtures" / "parity"), ("scenarios", ROOT / "outputs" / "scenario_parity")]
+def _parity_stats(root: Path) -> dict:
     stats: dict = {}
-    for label, root in roots:
-        if not root.exists():
-            continue
-        for inp in sorted([*root.glob("*/*.in.csv"), *root.glob("*/*.in.csv.gz")]):
-            block = inp.parent.name
-            out = inp.with_name(inp.name.replace(".in.", ".out."))
-            x, e = _load(inp), _load(out)
-            err = parity.compare(e, parity.run_sequence(block, x))
-            s = stats.setdefault(block, {"ticks": 0, "sequences": 0, "max_abs_error": 0.0, "scenario_ticks": 0})
-            s["ticks"] += len(x)
-            s["sequences"] += 1
-            if label == "scenarios":
-                s["scenario_ticks"] += len(x)
-            s["max_abs_error"] = max(s["max_abs_error"], err)
-    blocks = list(stats)
-    fig, ax = plt.subplots(1, 2, figsize=(8, 2.6))
-    ticks = [stats[b]["ticks"] for b in blocks]
-    ax[0].bar(blocks, ticks, color="#4c72b0")
-    ax[0].set_yscale("log")
-    ax[0].set_title("Ticks compared against Octave (log)")
-    for i, t in enumerate(ticks):
-        ax[0].text(i, t, f"{t:,}", ha="center", va="bottom", fontsize=6)
-    errs = [max(stats[b]["max_abs_error"], 1e-20) for b in blocks]
-    ax[1].bar(blocks, errs, color=["#55a868" if e <= 1e-12 else "#c44e52" for e in errs])
-    ax[1].axhline(1e-12, color="k", ls="--", lw=0.8)
-    ax[1].text(len(blocks) - 0.5, 1.5e-12, "tolerance 1e-12", ha="right", fontsize=6)
-    ax[1].set_yscale("log")
-    ax[1].set_ylim(1e-21, 1e-9)
-    ax[1].set_title("Max |Python - Octave| (1e-20 = exact)")
-    for a in ax:
-        a.tick_params(axis="x", rotation=30)
+    for inp in sorted([*root.glob("*/*.in.csv"), *root.glob("*/*.in.csv.gz")]):
+        block = inp.parent.name
+        x, e = _load(inp), _load(inp.with_name(inp.name.replace(".in.", ".out.")))
+        err = parity.compare(e, parity.run_sequence(block, x))
+        st = stats.setdefault(block, {"ticks": 0, "sequences": 0, "max_abs_error": 0.0})
+        st["ticks"] += len(x)
+        st["sequences"] += 1
+        st["max_abs_error"] = max(st["max_abs_error"], err)
+    return stats
+
+
+def parity_figure() -> dict:
+    committed = _parity_stats(ROOT / "tests" / "fixtures" / "parity")
+    scen_dir = ROOT / "outputs" / "scenario_parity"
+    if scen_dir.exists():
+        scenarios = _parity_stats(scen_dir)
+    else:
+        prev = json.loads((DATA / "parity.json").read_text()) if (DATA / "parity.json").exists() else {}
+        scenarios = prev.get("scenarios", {})
+        print(f"scenario parity: reused from data/parity.json (no {scen_dir.relative_to(ROOT)})")
+    blocks = list(dict.fromkeys([*committed, *scenarios]))
+    fig, ax = plt.subplots(figsize=(8.5, 3.4))
+    xs = np.arange(len(blocks))
+    c_ticks = np.array([committed.get(b, {}).get("ticks", 0) for b in blocks])
+    s_ticks = np.array([scenarios.get(b, {}).get("ticks", 0) for b in blocks])
+    ax.bar(xs - 0.2, c_ticks, 0.4, color="#4c72b0", label="committed fixtures")
+    ax.bar(xs + 0.2, s_ticks, 0.4, color="#55a868", label="8 closed-loop scenarios")
+    ax.set_yscale("log")
+    ax.set_ylim(10, 2e7)
+    for i, b in enumerate(blocks):
+        err = max(committed.get(b, {}).get("max_abs_error", 0.0), scenarios.get(b, {}).get("max_abs_error", 0.0))
+        label = "max |Δ| = 0" if err == 0 else f"max |Δ| = {err:.1e}"
+        ax.text(i, max(c_ticks[i], s_ticks[i]) * 1.4, label, ha="center", va="bottom", fontsize=8)
+    ax.set_xticks(xs, blocks)
+    ax.set_ylabel("ticks compared (log)")
+    total = int(c_ticks.sum() + s_ticks.sum())
+    ax.set_title(f"Python vs Octave running the model's chart code: {total:,} ticks, tolerance 1e-12")
+    ax.legend(loc="upper left", ncol=2)
     fig.tight_layout()
     fig.savefig(FIG / "parity.png")
     plt.close(fig)
-    return stats
+    return {"committed": committed, "scenarios": scenarios}
 
 
 def nominal_figure(r) -> None:
@@ -92,7 +103,7 @@ def nominal_figure(r) -> None:
     a0.set_xlim(-1.4, 1.4)
     a0.set_ylim(-1.2, 1.2)
     a0.set_title("Top view (m)")
-    a0.legend(fontsize=6, loc="upper left")
+    a0.legend(fontsize=7, loc="upper left")
     a1 = fig.add_axes([0.45, 0.42, 0.53, 0.49])
     a1.plot(t, s["z"], color="#4c72b0", label="height z")
     a1.plot(t, s["dz"], color="#dd8452", lw=0.8, ls="--", label="desired z")
@@ -105,13 +116,13 @@ def nominal_figure(r) -> None:
     a1.set_title("Nominal Phase 10 mission (SIL, full runtime incl. safety layer)")
     h1, l1 = a1.get_legend_handles_labels()
     h2, l2 = ax2.get_legend_handles_labels()
-    a1.legend(h1 + h2, l1 + l2, fontsize=6, loc="lower left")
+    a1.legend(h1 + h2, l1 + l2, fontsize=7, loc="lower left")
     a1.tick_params(labelbottom=False)
     a2 = fig.add_axes([0.45, 0.13, 0.53, 0.25], sharex=a1)
     for i, (k, lab) in enumerate([("confirmed", "pad confirmed"), ("ready", "landing ready"),
                                   ("latched", "LAND latched"), ("trig2", "trigger 2 sent")]):
         a2.fill_between(t, i + 0.1, i + 0.1 + 0.8 * s[k], step="post", alpha=0.7)
-        a2.text(t[0], i + 0.45, lab, fontsize=6, va="center")
+        a2.text(t[0], i + 0.45, lab, fontsize=7, va="center")
     a2.set_yticks([])
     a2.set_xlabel("time (s)")
     fig.savefig(FIG / "nominal_mission.png")
@@ -120,33 +131,40 @@ def nominal_figure(r) -> None:
 
 def safety_figure(results) -> dict:
     names = [n for n in sim.SCENARIOS if n != "nominal-autoland"]
-    fig, axes = plt.subplots(2, 4, figsize=(8, 3.6), sharey=True)
+    fig = plt.figure(figsize=(11, 6.2))
+    outer = fig.add_gridspec(2, 4, hspace=0.55, wspace=0.22, left=0.1, right=0.99, top=0.88, bottom=0.08)
+    lanes = [("trig2", "Takeoff/Land", "#dd8452"), ("trig3", "E-stop", "#c44e52"), ("trig4", "joy issue", "#8172b2")]
     summary = {}
-    for ax, name in zip(axes.flat, names, strict=False):
+    for idx, name in enumerate(names):
         r = results[name]
         s, t = r.signals, r.t
-        ax.plot(t, s["z"], color="#4c72b0", lw=1)
-        ax.plot(t, 0.9 + 0.08 * s["trig2"], color="#dd8452", lw=0.8)
-        ax.plot(t, 1.05 + 0.08 * s["trig3"], color="#c44e52", lw=0.8)
-        ax.plot(t, 1.2 + 0.08 * s["trig4"], color="#8172b2", lw=0.8)
-        for ev, c in (("vision_lost", "#937860"), ("tracking_lost", "#937860"), ("garbage_injected", "#937860")):
+        cell = outer[idx // 4, idx % 4].subgridspec(2, 1, height_ratios=[2, 1], hspace=0.08)
+        az = fig.add_subplot(cell[0])
+        ab = fig.add_subplot(cell[1], sharex=az)
+        az.plot(t, s["z"], color="#4c72b0", lw=1.2)
+        az.set_ylim(-0.05, 0.85)
+        for ev in ("vision_lost", "tracking_lost", "garbage_injected"):
             if ev in r.events:
-                ax.axvline(r.events[ev], color=c, ls=":", lw=0.8)
-        ax.set_title(name, fontsize=7)
+                for a in (az, ab):
+                    a.axvline(r.events[ev], color="#937860", ls=":", lw=1)
+        for k, (key, _, c) in enumerate(lanes):
+            ab.fill_between(t, k + 0.1, k + 0.1 + 0.8 * s[key], step="post", color=c, alpha=0.85)
+        ab.set_ylim(0, 3)
+        ab.set_yticks([0.5, 1.5, 2.5], [lab for _, lab, _ in lanes] if idx % 4 == 0 else [])
+        az.tick_params(labelbottom=False)
+        if idx % 4 == 0:
+            az.set_ylabel("height z (m)")
+        else:
+            az.tick_params(labelleft=False)
+        if idx >= 4 or idx + 4 >= len(names):
+            ab.set_xlabel("time (s)")
         bits = int(s["abort_bits"][-1])
-        ax.text(0.02, 0.02, f"abort bits {bits}\nlanded {'yes' if 'landed' in r.events else 'no'}",
-                transform=ax.transAxes, fontsize=6)
+        az.set_title(f"{name}\nabort bits {bits}, landed {'yes' if 'landed' in r.events else 'no'}", fontsize=9)
         summary[name] = {"events": r.events, "abort_bits": bits, "gate_faults": int(s["faults"].sum()),
                          "vision_refused": dict(r.runtime.vision_guard.refused),
                          "pose_refused": dict(r.runtime.pose_guard.refused)}
-    for ax in list(axes.flat)[len(names):]:
-        ax.set_visible(False)
-    axes[0, 0].set_ylabel("z (m) / bits")
-    axes[1, 0].set_ylabel("z (m) / bits")
-    axes[0, 0].set_yticks([0, 0.5, 0.94, 1.09, 1.24], ["0", "0.5", "trig2", "E-stop", "joy issue"])
-    for ax in axes[1][: len(names) - 4]:
-        ax.set_xlabel("time (s)")
-    fig.tight_layout()
+    fig.suptitle("Fault scenarios: vehicle height (top) and the trigger bits sent to the Commander (bottom); "
+                 "dotted line = injected fault", fontsize=10)
     fig.savefig(FIG / "safety_scenarios.png")
     plt.close(fig)
     return summary
@@ -165,7 +183,7 @@ def mutation_figure() -> dict | None:
             rows.append((f"{sweep}\n({suite})", counts))
     if not rows:
         return None
-    fig, ax = plt.subplots(figsize=(6, 2.2))
+    fig, ax = plt.subplots(figsize=(7, 2.6))
     keys = [("killed", "#55a868"), ("killed-error", "#8172b2"), ("timeout", "#ccb974"), ("survived", "#c44e52")]
     left = np.zeros(len(rows))
     for k, c in keys:
@@ -173,10 +191,10 @@ def mutation_figure() -> dict | None:
         ax.barh([r[0] for r in rows], vals, left=left, color=c, label=k)
         for i, v in enumerate(vals):
             if v:
-                ax.text(left[i] + v / 2, i, str(v), ha="center", va="center", fontsize=7, color="white")
+                ax.text(left[i] + v / 2, i, str(v), ha="center", va="center", fontsize=9, color="white")
         left += vals
     ax.invert_yaxis()
-    ax.legend(fontsize=6, ncol=4, loc="lower right", bbox_to_anchor=(1, 1.0))
+    ax.legend(fontsize=8, ncol=4, loc="lower right", bbox_to_anchor=(1, 1.0))
     ax.set_xlabel("mutants")
     fig.tight_layout()
     fig.savefig(FIG / "mutation.png")
