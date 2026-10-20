@@ -30,6 +30,8 @@ def cmd_sim(args) -> int:
             "max_stage": int(max(s["stage"])),
             "abort_bits": int(s["abort_bits"][-1]),
             "gate_faults": dict(r.runtime.gate.faults),
+            "gate_status": r.runtime.gate.status.value,
+            "centring_refusals": r.runtime.gate.centring_refusals,
             "vision_refused": dict(r.runtime.vision_guard.refused),
             "vision_resyncs": r.runtime.vision_guard.resyncs,
             "pose_refused": dict(r.runtime.pose_guard.refused),
@@ -82,6 +84,7 @@ def cmd_loopback(args) -> int:
     out = {"ticks": st.ticks, "sent": st.sent, "send_dropped": st.send_dropped, "commander_packets": len(fake.packets),
            "catch_up_ticks": st.catch_up_ticks, "max_lag_ms": round(st.max_lag_s * 1e3, 3),
            "vision_accepted": server.runtime.vision_guard.accepted, "stopped": st.stopped_reason,
+           "gate_status": st.gate_status, "centring_refusals": st.centring_refusals,
            "loopback_ms": None}
     if fake.packets:
         last = fake.packets[-1]

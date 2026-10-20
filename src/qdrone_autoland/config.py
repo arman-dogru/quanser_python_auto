@@ -134,6 +134,7 @@ class SafetyConfig:
     joystick_stale_s: float = 0.20      # same window as the model's disconnect threshold
     vision_future_tolerance_s: float = 0.05
     geofence_margin: float = 1e-9       # numerical slack on every bound
+    centring_refusal_escalate_s: float = 2.0   # refused centring poses for this long -> CENTRING_FAULT
 
     def z_limits(self, model: ModelConstants) -> tuple[float, float]:
         """Every desired height the logic can produce lies in the abort-hold clamp."""

@@ -47,6 +47,9 @@ class ServeStats:
     lag_p50_s: float = 0.0
     lag_p99_s: float = 0.0
     lag_p999_s: float = 0.0
+    gate_status: str = "ok"           # OutputGate status on the last tick (ok / centring-refused / centring-fault)
+    centring_refusals: int = 0        # centring poses refused by the gate (ticks)
+    centring_escalations: int = 0     # times refusals lasted long enough to latch centring-fault
 
 
 class MissionServer:
@@ -93,12 +96,24 @@ class MissionServer:
         if rec is None:
             self._fail(f"runtime: {self.runtime.failed}")
             return None
+        self._gate_status(rec.decision.status.value)
         if rec.decision.packet is not None:
             if self.commander.send(rec.decision.packet.pack()):
                 self.stats.sent += 1
             else:
                 self.stats.send_dropped += 1
         return rec
+
+    def _gate_status(self, status: str) -> None:
+        gate = self.runtime.gate
+        self.stats.centring_refusals = gate.centring_refusals
+        self.stats.centring_escalations = gate.escalations
+        if status != self.stats.gate_status:
+            level = logging.INFO if status == "ok" else (logging.ERROR if status == "centring-fault" else
+                                                         logging.WARNING)
+            log.log(level, "output gate: %s -> %s at t=%.3f s (%d centring poses refused so far)",
+                    self.stats.gate_status, status, self.k * self.cfg.model.step_size, gate.centring_refusals)
+            self.stats.gate_status = status
 
     def _fail(self, reason: str) -> None:
         if self.stats.stopped_reason is None:

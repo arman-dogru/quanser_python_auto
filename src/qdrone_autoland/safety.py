@@ -182,15 +182,35 @@ class JoystickGuard:
         return self.last_sample
 
 
+class GateStatus(enum.Enum):
+    OK = "ok"
+    CENTRING_REFUSED = "centring-refused"      # refusing centring poses, holding where the vehicle is
+    CENTRING_FAULT = "centring-fault"          # refusals lasted too long: latched hold, no autonomous LAND
+
+
 @dataclass
 class GateDecision:
     packet: CommandPacket | None       # None in DRY_RUN
     candidate: CommandPacket           # what the model would have sent
     faults: list[str] = field(default_factory=list)
     autoland_applied: bool = False
+    status: GateStatus = GateStatus.OK
 
 
 class OutputGate:
+    """Last line of defence before the Commander socket (see docs/SAFETY.md).
+
+    Centring rules. On the entry tick, and on every tick after a refused
+    centring pose (re-anchoring), the model's pose may be at most 0.5 m from
+    where the vehicle *is*: the measured pose when it is finite and tracked,
+    else the last accepted pose. Otherwise it may move at most 5 mm from the
+    pose accepted on the previous tick, and never more than 0.5 m from the
+    centring origin. A refused centring pose holds the vehicle where it was
+    when the refusals started (never a stale earlier target). Refusals that
+    go on for ``centring_refusal_escalate_s`` latch ``CENTRING_FAULT``: hold,
+    no autonomous LAND, until centring ends (the operator lands or disarms).
+    """
+
     def __init__(self, cfg: Config = DEFAULT, mode: Mode = Mode.DRY_RUN) -> None:
         s, m, a = cfg.safety, cfg.model, cfg.auto
         self.mode = mode
@@ -199,14 +219,31 @@ class OutputGate:
         self.center_step = a.center_max_step
         self.max_disp = a.center_max_displacement
         self.eps = s.geofence_margin
+        self.escalate_ticks = max(1, int(round(s.centring_refusal_escalate_s / m.step_size)))
         self.reset()
 
     def reset(self) -> None:
         self.last_desired: tuple[float, ...] | None = None
         self.last_measured: tuple[float, ...] | None = None
         self.prev_centering = False
+        self.prev_refused = False            # a centring pose was refused on the previous tick
         self.center_origin: tuple[float, float] | None = None
+        self.refusal_hold: tuple[float, ...] | None = None
+        self.refusal_ticks = 0               # consecutive refused centring ticks
+        self.status = GateStatus.OK
         self.faults = Counter()
+        self.centring_refusals = 0           # refused centring ticks, total
+        self.escalations = 0
+
+    def _vehicle_xy(self, out: TickOutputs) -> tuple[float, float] | None:
+        """Where the vehicle is: the measured pose if finite and tracked, else
+        the last accepted desired pose, else None."""
+        m = tuple(out.measured_pose[:2])
+        if out.is_tracking > 0.5 and len(m) == 2 and _finite(m):
+            return float(m[0]), float(m[1])
+        if self.last_desired is not None:
+            return self.last_desired[0], self.last_desired[1]
+        return None
 
     def _desired_ok(self, d, out: TickOutputs) -> str | None:
         if len(d) != 4 or not _finite(d):
@@ -217,22 +254,25 @@ class OutputGate:
             return "desired-outside-geofence"
         if not (self.z_lo - e <= z <= self.z_hi + e):
             return "desired-height-out-of-range"
-        if out.centering_active and not self.prev_centering and self.last_desired is not None:
-            # Entering centring: the model starts from the hover-hold pose, which is
-            # where the vehicle already is. A jump (e.g. a NaN hold pose clamped to
-            # the geofence corner by MATLAB min/max) is refused.
-            px, py, _, _ = self.last_desired
-            if math.hypot(x - px, y - py) > self.max_disp + e:
-                return "centering-entry-jump"
-        if out.centering_active and self.prev_centering and self.last_desired is not None:
-            # No separate height-step limit: z is already confined to [0.55, 0.70] m
-            # above, and the model's abort hold legitimately steps 0.70 -> 0.55 m.
+        if not out.centering_active:
+            return None
+        # No separate height-step limit: z is already confined to [0.55, 0.70] m
+        # above, and the model's abort hold legitimately steps 0.70 -> 0.55 m.
+        if not self.prev_centering or self.prev_refused:
+            # Entry (the model starts from the hover-hold pose, captured from the
+            # measured pose) or re-anchoring after a refusal: compare with where
+            # the vehicle is. Refuses e.g. a NaN hold pose clamped to the
+            # geofence corner by MATLAB min/max.
+            ref = self._vehicle_xy(out)
+            if ref is not None and math.hypot(x - ref[0], y - ref[1]) > self.max_disp + e:
+                return "centering-entry-jump" if not self.prev_centering else "centering-reanchor-jump"
+        elif self.last_desired is not None:
             px, py, _, _ = self.last_desired
             if math.hypot(x - px, y - py) > self.center_step + e:
                 return "centering-step-too-large"
-            if self.center_origin is not None and math.hypot(x - self.center_origin[0],
-                                                             y - self.center_origin[1]) > self.max_disp + e:
-                return "centering-displacement-too-large"
+        if self.prev_centering and self.center_origin is not None and math.hypot(
+                x - self.center_origin[0], y - self.center_origin[1]) > self.max_disp + e:
+            return "centering-displacement-too-large"
         return None
 
     def _origin(self, out: TickOutputs, accepted: bool) -> tuple[float, float] | None:
@@ -240,14 +280,23 @@ class OutputGate:
         centring pose when the gate accepts it (the model's own origin). When
         it is refused (e.g. a NaN hold pose: the model commands the geofence
         corner with a NaN yaw, and its own 0.5 m limit becomes a no-op because
-        NaN comparisons are false), the last accepted desired pose, where the
-        vehicle is holding, then the measured pose."""
-        cands = [tuple(out.desired_pose[:2])] if accepted else []
-        cands += [(self.last_desired or ())[:2], tuple(out.measured_pose[:2])]
-        for cand in cands:
-            if len(cand) == 2 and _finite(cand):
-                return float(cand[0]), float(cand[1])
-        return None
+        NaN comparisons are false), where the vehicle is (see _vehicle_xy).
+        Never a non-finite value; None means the first accepted pose sets it."""
+        if accepted:
+            return float(out.desired_pose[0]), float(out.desired_pose[1])
+        return self._vehicle_xy(out)
+
+    def _hold_here(self, out: TickOutputs) -> tuple[float, ...] | None:
+        xy = self._vehicle_xy(out)
+        if xy is None:
+            return None
+        if self.last_desired is not None:
+            z, yaw = self.last_desired[2], self.last_desired[3]
+        else:
+            mz, myaw = float(out.measured_pose[2]), float(out.measured_pose[3])
+            z = min(max(mz, self.z_lo), self.z_hi) if math.isfinite(mz) else self.z_hi
+            yaw = myaw if math.isfinite(myaw) else 0.0
+        return (xy[0], xy[1], z, yaw)
 
     def step(self, out: TickOutputs) -> GateDecision:
         faults: list[str] = []
@@ -260,28 +309,54 @@ class OutputGate:
         triggers = [op[0], op[1], op[2], op[3]]
         autoland = False
         if arb[1] == 0.0 and op[1] == 1.0 and op[0] == 1.0:
-            if self.mode is Mode.AUTOLAND:
+            if self.mode is Mode.AUTOLAND and self.status is not GateStatus.CENTRING_FAULT:
                 triggers[1] = 0.0
                 autoland = True
         if (arb[0], arb[2], arb[3]) != (op[0], op[2], op[3]):
             faults.append("arbiter-altered-protected-trigger")
         # Desired pose
+        centring = bool(out.centering_active)
         reason = self._desired_ok(out.desired_pose, out)
-        if out.centering_active and not self.prev_centering:
+        if centring and not self.prev_centering:
             self.center_origin = self._origin(out, accepted=reason is None)
-        if not out.centering_active:
+        if not centring:
             self.center_origin = None
+            self.refusal_hold = None
+            self.refusal_ticks = 0
+            self.prev_refused = False
+            self.status = GateStatus.OK
         elif self.center_origin is None and reason is None:
-            # No finite origin at entry (nothing accepted yet, measured non-finite):
+            # No finite origin at entry (nothing accepted yet, measured invalid):
             # the first accepted centring pose becomes the origin.
             self.center_origin = (float(out.desired_pose[0]), float(out.desired_pose[1]))
+        if centring and self.status is GateStatus.CENTRING_FAULT:
+            reason = reason or "centring-fault-hold"
         if reason is None:
             desired = tuple(float(v) for v in out.desired_pose)
             self.last_desired = desired
+            if centring:
+                self.prev_refused = False
+                self.refusal_ticks = 0
+                self.refusal_hold = None
+                self.status = GateStatus.OK
         else:
             faults.append(reason)
             desired = self.last_desired
-        self.prev_centering = bool(out.centering_active)
+            if centring:
+                self.centring_refusals += 1
+                self.refusal_ticks += 1
+                self.prev_refused = True
+                if self.refusal_hold is None:
+                    self.refusal_hold = self._hold_here(out)
+                if self.refusal_hold is not None:
+                    desired = self.refusal_hold
+                if self.status is GateStatus.OK:
+                    self.status = GateStatus.CENTRING_REFUSED
+                if self.refusal_ticks >= self.escalate_ticks and self.status is not GateStatus.CENTRING_FAULT:
+                    self.status = GateStatus.CENTRING_FAULT
+                    self.escalations += 1
+                    faults.append("centring-refusals-escalated")
+        self.prev_centering = centring
         # Measured pose / tracking
         tracking = 1.0 if out.is_tracking > 0.5 else 0.0
         if _finite(out.measured_pose):
@@ -304,4 +379,4 @@ class OutputGate:
         packet = CommandPacket(tuple(triggers), tracking, measured, desired, ts)
         for f in faults:
             self.faults[f] += 1
-        return GateDecision(None if self.mode is Mode.DRY_RUN else packet, out.packet, faults, autoland)
+        return GateDecision(None if self.mode is Mode.DRY_RUN else packet, out.packet, faults, autoland, self.status)

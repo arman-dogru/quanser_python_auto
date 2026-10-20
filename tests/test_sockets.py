@@ -1,6 +1,8 @@
 """Socket adapters and the real-time loop on 127.0.0.1."""
 from __future__ import annotations
 
+import dataclasses
+import logging
 import socket
 import struct
 import sys
@@ -307,3 +309,27 @@ def test_serve_does_not_busy_spin():
     assert st.ticks == 1000 and st.stopped_reason is None
     assert st.cpu_s < 0.6 * st.wall_s, (st.cpu_s, st.wall_s)
     assert st.lag_p50_s < 0.001
+
+
+def test_serve_exposes_centring_refusals_and_escalation(caplog):
+    """A centring refusal is never silent: ServeStats and the log carry the
+    gate status, the refusal counter and the escalation."""
+    pub, fake, srv = _server(Mode.MONITOR)
+    assert fake.connected.wait(3)
+    srv.run(duration=0.05)
+    assert srv.stats.gate_status == "ok" and srv.stats.centring_refusals == 0
+    core_step = srv.runtime.core.step
+
+    def centring_far_away(*a, **kw):
+        out = core_step(*a, **kw)
+        return dataclasses.replace(out, centering_active=True, desired_pose=(1.2, 1.0, 0.7, 0.0))
+    srv.runtime.core.step = centring_far_away
+    with caplog.at_level(logging.WARNING, logger="qdrone_autoland.io.serve"):
+        srv.run(duration=0.15)
+        assert srv.stats.gate_status == "centring-refused" and srv.stats.centring_refusals >= 99
+        assert "centring-refused" in caplog.text
+        srv.run(duration=2.2)
+    assert srv.stats.gate_status == "centring-fault" and srv.stats.centring_escalations == 1
+    assert srv.stats.stopped_reason is None                     # held, not fail-stopped
+    assert "centring-fault" in caplog.text
+    fake.stop(); srv.close(); pub.close()

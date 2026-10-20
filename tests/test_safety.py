@@ -12,7 +12,7 @@ from qdrone_autoland.config import DEFAULT
 from qdrone_autoland.mission_server import OptiTrackSample
 from qdrone_autoland.protocol import VISION
 from qdrone_autoland.runtime import MissionRuntime, RawInputs
-from qdrone_autoland.safety import JoystickGuard, Mode, OutputGate, PoseGuard, VisionGuard
+from qdrone_autoland.safety import GateStatus, JoystickGuard, Mode, OutputGate, PoseGuard, VisionGuard
 
 NOW = 1_760_000_000.0
 
@@ -249,6 +249,111 @@ def test_centring_origin_when_entry_has_nothing_finite(outputs):
         x += 0.0049
         faults = gate.step(dataclasses.replace(c, desired_pose=(x, -0.9, 0.7, 0.0))).faults
     assert faults == ["centering-displacement-too-large"] and x < 0.51
+
+
+def _grid_then_centre(gate, outputs, waypoint, measured, entry):
+    """Grid search towards ``waypoint`` while the vehicle is at ``measured``,
+    then the model enters centring at ``entry`` (its hover-hold pose)."""
+    o = dataclasses.replace(outputs, measured_pose=measured, is_tracking=1.0)
+    assert not gate.step(dataclasses.replace(o, desired_pose=waypoint)).faults
+    return gate.step(dataclasses.replace(o, centering_active=True, desired_pose=entry))
+
+
+@pytest.mark.parametrize("waypoint,measured,entry", [
+    ((-1.2, -1.0, 0.7, 0.0), (-0.098, -0.851, 0.7, 0.0), (-0.10, -0.852, 0.7, 0.0)),   # pad (0.1, -0.95)
+    ((0.0, 0.333, 0.7, 0.0), (-0.578, 0.322, 0.7, 0.0), (-0.58, 0.321, 0.7, 0.0)),     # pad (-0.3, 0.407)
+    ((0.6, 1.0, 0.7, 0.0), (1.142, 0.905, 0.7, 0.0), (1.144, 0.906, 0.7, 0.0)),        # pad (0.9, 0.95)
+])
+def test_centring_entry_is_measured_from_where_the_vehicle_is(outputs, waypoint, measured, entry):
+    """Pad confirmed while the vehicle is still > 0.5 m short of its waypoint:
+    the entry pose (the hover-hold pose, captured from the measured pose) is
+    accepted, and centring proceeds."""
+    gate = OutputGate(DEFAULT, Mode.AUTOLAND)
+    dec = _grid_then_centre(gate, outputs, waypoint, measured, entry)
+    assert not dec.faults and dec.packet.desired_pose == entry and dec.status is GateStatus.OK
+    nxt = (entry[0] + 0.004, entry[1], 0.7, 0.0)
+    dec = gate.step(dataclasses.replace(outputs, measured_pose=measured, centering_active=True, desired_pose=nxt))
+    assert not dec.faults
+
+
+def test_centring_entry_falls_back_to_last_accepted_when_not_tracking(outputs):
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    gate.step(dataclasses.replace(outputs, desired_pose=(0.0, -0.9, 0.7, 0.0)))
+    lost = dataclasses.replace(outputs, measured_pose=(1.0, 0.5, 0.7, 0.0), is_tracking=0.0, centering_active=True)
+    assert gate.step(dataclasses.replace(lost, desired_pose=(1.0, 0.5, 0.7, 0.0))).faults[0] == "centering-entry-jump"
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    gate.step(dataclasses.replace(outputs, desired_pose=(0.0, -0.9, 0.7, 0.0)))
+    assert "centering-entry-jump" not in gate.step(dataclasses.replace(lost, desired_pose=(0.1, -0.8, 0.7, 0.0))).faults
+
+
+def test_refused_centring_holds_where_the_vehicle_is_and_reanchors(outputs):
+    """One refused centring pose must not lock centring out: the vehicle is held
+    where it is (not at a stale earlier target), and the next tick is judged
+    against the measured pose again."""
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    here = (0.2, -0.5, 0.7, 0.0)
+    o = dataclasses.replace(outputs, measured_pose=here, is_tracking=1.0)
+    gate.step(dataclasses.replace(o, desired_pose=(1.2, 1.0, 0.7, 0.0)))               # stale far target
+    c = dataclasses.replace(o, centering_active=True)
+    assert not gate.step(dataclasses.replace(c, desired_pose=here)).faults
+    dec = gate.step(dataclasses.replace(c, desired_pose=(0.25, -0.5, 0.7, 0.0)))       # 50 mm step: refused
+    assert dec.faults == ["centering-step-too-large"] and dec.status is GateStatus.CENTRING_REFUSED
+    assert dec.packet.desired_pose[:2] == here[:2]
+    dec = gate.step(dataclasses.replace(c, desired_pose=(0.255, -0.5, 0.7, 0.0)))      # re-anchored on measured
+    assert not dec.faults and dec.status is GateStatus.OK and dec.packet.desired_pose[0] == 0.255
+    assert gate.centring_refusals == 1
+    dec = gate.step(dataclasses.replace(c, desired_pose=(0.259, -0.5, 0.7, 0.0)))      # back to 5 mm steps
+    assert not dec.faults
+    assert gate.step(dataclasses.replace(c, desired_pose=(0.3, -0.5, 0.7, 0.0))).faults == ["centering-step-too-large"]
+
+
+def test_refused_centring_entry_holds_the_vehicle_not_the_stale_waypoint(outputs):
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    here = (0.2, -0.5, 0.7, 0.0)
+    o = dataclasses.replace(outputs, measured_pose=here, is_tracking=1.0)
+    gate.step(dataclasses.replace(o, desired_pose=(1.2, 1.0, 0.7, 0.0)))               # waypoint still far away
+    dec = gate.step(dataclasses.replace(o, centering_active=True, desired_pose=(-1.2, -1.0, 0.7, 0.0)))
+    assert dec.faults == ["centering-entry-jump"] and dec.packet.desired_pose[:2] == here[:2]
+
+
+def test_intermittent_centring_refusals_do_not_escalate(outputs):
+    """The 2 s escalation timer counts consecutive refusals; an accepted pose resets it."""
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    o = dataclasses.replace(outputs, measured_pose=(0.0, -0.9, 0.7, 0.0), is_tracking=1.0)
+    gate.step(dataclasses.replace(o, desired_pose=(0.0, -0.9, 0.7, 0.0)))
+    bad = dataclasses.replace(o, centering_active=True, desired_pose=(-1.2, -1.0, 0.7, 0.0))
+    good = dataclasses.replace(o, centering_active=True, desired_pose=(0.0, -0.9, 0.7, 0.0))
+    for _ in range(3):
+        for _ in range(gate.escalate_ticks - 1):
+            assert gate.step(bad).status is GateStatus.CENTRING_REFUSED
+        assert gate.step(good).status is GateStatus.OK
+    assert gate.escalations == 0 and gate.centring_refusals == 3 * (gate.escalate_ticks - 1)
+
+
+def test_persistent_centring_refusals_escalate_to_a_latched_fault(outputs):
+    gate = OutputGate(DEFAULT, Mode.AUTOLAND)
+    n = int(round(DEFAULT.safety.centring_refusal_escalate_s / DEFAULT.model.step_size))
+    assert n == 2000
+    o = dataclasses.replace(outputs, measured_pose=(0.0, -0.9, 0.7, 0.0), is_tracking=1.0,
+                            operator_triggers=(1.0, 1.0, 0.0, 0.0), arbiter_triggers=(1.0, 1.0, 0.0, 0.0))
+    gate.step(dataclasses.replace(o, desired_pose=(0.0, -0.9, 0.7, 0.0)))
+    c = dataclasses.replace(o, centering_active=True, desired_pose=(-1.2, -1.0, 0.7, 0.0))   # NaN-hold corner
+    for k in range(1, n):
+        dec = gate.step(c)
+        assert dec.status is GateStatus.CENTRING_REFUSED, k
+    dec = gate.step(c)
+    assert dec.status is GateStatus.CENTRING_FAULT and "centring-refusals-escalated" in dec.faults
+    assert gate.escalations == 1 and gate.centring_refusals == n
+    assert dec.packet.desired_pose[:2] == (0.0, -0.9)
+    # Latched: an acceptable pose, or the arbiter asking for LAND, does not resume autonomy.
+    land = dataclasses.replace(o, centering_active=True, desired_pose=(0.0, -0.9, 0.7, 0.0),
+                               arbiter_triggers=(1.0, 0.0, 0.0, 0.0))
+    dec = gate.step(land)
+    assert dec.status is GateStatus.CENTRING_FAULT and dec.packet.triggers[1] == 1.0 and not dec.autoland_applied
+    assert "centring-fault-hold" in dec.faults and gate.escalations == 1
+    # Centring ends (operator lands / disarms): cleared.
+    dec = gate.step(dataclasses.replace(o, desired_pose=(0.0, -0.9, 0.7, 0.0)))
+    assert dec.status is GateStatus.OK and not dec.faults
 
 
 def test_entering_centring_from_hold_pose_is_not_a_fault(outputs):
