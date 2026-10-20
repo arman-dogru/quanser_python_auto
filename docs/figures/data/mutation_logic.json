@@ -1,0 +1,497 @@
+{
+ "sweep": "logic",
+ "mutants": 66,
+ "summary": {
+  "parity": {
+   "killed": 44,
+   "killed-error": 0,
+   "timeout": 0,
+   "survived": 22
+  },
+  "all": {
+   "killed": 61,
+   "killed-error": 0,
+   "timeout": 0,
+   "survived": 5
+  }
+ },
+ "survivors": [
+  "arb-ready-threshold",
+  "gate-ready-recheck",
+  "grid-max-step",
+  "grid-px-tol",
+  "ml-max-nan"
+ ],
+ "equivalent": {
+  "arb-ready-threshold": "landingReady is the gate's logical output (0 or 1 only, also in the model's typing), so > 0.5 and >= 0.5 cannot differ.",
+  "gate-ready-recheck": "The ready expression is only reached when not (no new sample and stale): either a new sample just set lastFresh = clockTime (finite, checked earlier) or the gate is not stale, i.e. clockTime - lastFresh <= 0.5 already holds.",
+  "grid-max-step": "A step is only taken when the pixel error exceeds 20 px; with this map the smallest resulting step is sigma_min(map) * (0.50/0.70) * 20 px = 0.023 m, so n > 0.005 and n > 0.010 always agree and the clamp result is the same (config-dependent equivalence).",
+  "ml-max-nan": "Every call site passes the possibly-NaN value as the first operand and a finite constant second; for a NaN first operand `a >= b` is False and the fallback already returns b, exactly what the NaN branch does.",
+  "grid-px-tol": "Differs only when the pixel-error norm is exactly 20.0 px. The target pixel is centre - map\\offset (not representable), so an exact hit needs a crafted float whose result also depends on Octave's norm vs math.hypot rounding; a measure-zero boundary, not a behaviour."
+ },
+ "seconds": 43.2,
+ "results": [
+  {
+   "id": "arb-armed-threshold",
+   "file": "logic/arbiter.py",
+   "rule": "armed is trig1 > 0.5",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "arb-reset-or",
+   "file": "logic/arbiter.py",
+   "rule": "latch resets on disarm OR takeoff low",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "arb-ready-threshold",
+   "file": "logic/arbiter.py",
+   "rule": "ready > 0.5",
+   "parity": "survived",
+   "all": "survived"
+  },
+  {
+   "id": "arb-lower-index",
+   "file": "logic/arbiter.py",
+   "rule": "only trigger 2 lowered",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "arb-no-reset",
+   "file": "logic/arbiter.py",
+   "rule": "latch clears",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "gate-stage",
+   "file": "logic/landing_gate.py",
+   "rule": "ready only at stage 5",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "gate-fresh-10",
+   "file": "logic/landing_gate.py",
+   "rule": "10 fresh frames",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "gate-xy-strict",
+   "file": "logic/landing_gate.py",
+   "rule": "xy error > 0.08 rejects",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "gate-height-tol",
+   "file": "logic/landing_gate.py",
+   "rule": "height tolerance 0.04",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "gate-stale-strict",
+   "file": "logic/landing_gate.py",
+   "rule": "stale is > 0.5 s",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "gate-abort-priority",
+   "file": "logic/landing_gate.py",
+   "rule": "abort checked before vision",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "gate-stale-restart",
+   "file": "logic/landing_gate.py",
+   "rule": "count restarts after stale",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "gate-tracking-finite",
+   "file": "logic/landing_gate.py",
+   "rule": "non-finite desired rejected",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "gate-ready-recheck",
+   "file": "logic/landing_gate.py",
+   "rule": "ready rechecks freshness",
+   "parity": "survived",
+   "all": "survived"
+  },
+  {
+   "id": "abort-reset-cond",
+   "file": "logic/abort_diagnostic.py",
+   "rule": "reset only at stage 0 without abort",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "abort-floor-strict",
+   "file": "logic/abort_diagnostic.py",
+   "rule": "below floor is z < 0.45",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "abort-unknown",
+   "file": "logic/abort_diagnostic.py",
+   "rule": "no cause -> 16",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "abort-latch-first",
+   "file": "logic/abort_diagnostic.py",
+   "rule": "first abort latched",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "abort-tracking-bit",
+   "file": "logic/abort_diagnostic.py",
+   "rule": "tracking bit 2",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "conf-new-frame",
+   "file": "logic/yolo_confirmation.py",
+   "rule": "repeated frame ignored",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "conf-conf-geq",
+   "file": "logic/yolo_confirmation.py",
+   "rule": "confidence >= threshold",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "conf-bounds-u",
+   "file": "logic/yolo_confirmation.py",
+   "rule": "u <= width",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "conf-bounds-v0",
+   "file": "logic/yolo_confirmation.py",
+   "rule": "v >= 0",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "conf-release-10",
+   "file": "logic/yolo_confirmation.py",
+   "rule": "release after 10 bad",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "conf-stale",
+   "file": "logic/yolo_confirmation.py",
+   "rule": "stale > 0.5 s drops",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "conf-bad-reset",
+   "file": "logic/yolo_confirmation.py",
+   "rule": "valid frame resets bad",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "conf-takeoff-low-fresh",
+   "file": "logic/yolo_confirmation.py",
+   "rule": "takeoff low refreshes lastFresh",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "conf-capture-pose",
+   "file": "logic/yolo_confirmation.py",
+   "rule": "hold pose captured at confirmation",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-wp-rounding",
+   "file": "logic/grid_manager.py",
+   "rule": "waypoints at mat2str 6 digits",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-floor-strict",
+   "file": "logic/grid_manager.py",
+   "rule": "abort when z < 0.45",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-max-step",
+   "file": "logic/grid_manager.py",
+   "rule": "0.005 m per frame",
+   "parity": "survived",
+   "all": "survived"
+  },
+  {
+   "id": "grid-px-tol",
+   "file": "logic/grid_manager.py",
+   "rule": "pixel tolerance inclusive",
+   "parity": "survived",
+   "all": "survived"
+  },
+  {
+   "id": "grid-yaw-sign",
+   "file": "logic/grid_manager.py",
+   "rule": "rotation by yaw - yaw0",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-rot-sy",
+   "file": "logic/grid_manager.py",
+   "rule": "rotation sy",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-map-scale",
+   "file": "logic/grid_manager.py",
+   "rule": "map scales with height",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-offset-solve",
+   "file": "logic/grid_manager.py",
+   "rule": "target = centre - map\\offset",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-disp-limit",
+   "file": "logic/grid_manager.py",
+   "rule": "0.5 m displacement limit",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-stage2-height",
+   "file": "logic/grid_manager.py",
+   "rule": "stage 2 targets 0.60",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-xy-settle",
+   "file": "logic/grid_manager.py",
+   "rule": "xy settle 0.12",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-hold-clamp",
+   "file": "logic/grid_manager.py",
+   "rule": "abort hold height clamp",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-dwell",
+   "file": "logic/grid_manager.py",
+   "rule": "dwell 100 samples at waypoint",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-reverse",
+   "file": "logic/grid_manager.py",
+   "rule": "reverse when last waypoint closer",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-centered-stage5",
+   "file": "logic/grid_manager.py",
+   "rule": "centered needs stage 5",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "grid-tracking-enter",
+   "file": "logic/grid_manager.py",
+   "rule": "centering needs tracking",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "ext-range",
+   "file": "logic/extract_object.py",
+   "rule": "index > n -> zeros",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "ext-tracking",
+   "file": "logic/extract_object.py",
+   "rule": "tracking at index + 6n",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "comm-time",
+   "file": "logic/comm_loss.py",
+   "rule": "silent first second",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "comm-error",
+   "file": "logic/comm_loss.py",
+   "rule": "error >= 0 healthy",
+   "parity": "killed",
+   "all": "killed"
+  },
+  {
+   "id": "ml-max-nan",
+   "file": "logic/_matlab.py",
+   "rule": "max ignores NaN",
+   "parity": "survived",
+   "all": "survived"
+  },
+  {
+   "id": "blk-bias",
+   "file": "blocks.py",
+   "rule": "rigid body offset subtracted",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "blk-r-transpose",
+   "file": "blocks.py",
+   "rule": "xyz_RSF = R' * xyz_MF",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "blk-euler-order",
+   "file": "blocks.py",
+   "rule": "YZX inputs (rot2, rot3, rot1)",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "blk-unwrap",
+   "file": "blocks.py",
+   "rule": "yaw unwrapped",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "blk-threshold-dur",
+   "file": "blocks.py",
+   "rule": "threshold needs full duration",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "blk-takeoff-axis",
+   "file": "blocks.py",
+   "rule": "takeoff when Rz >= -0.5",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "blk-issue-zero-arm",
+   "file": "blocks.py",
+   "rule": "joystick issue zeroes arm",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "blk-estop-button",
+   "file": "blocks.py",
+   "rule": "E-stop is button 1",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "blk-home-height",
+   "file": "blocks.py",
+   "rule": "home z + 0.70",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "blk-home-after5",
+   "file": "blocks.py",
+   "rule": "home only after 5 s",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "blk-pulse-check",
+   "file": "blocks.py",
+   "rule": "conditioning waits for first edge",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "core-arbiter-ready",
+   "file": "mission_server.py",
+   "rule": "arbiter fed by gate",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "core-packet-triggers",
+   "file": "mission_server.py",
+   "rule": "packet triggers from arbiter",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "core-rate-hold",
+   "file": "mission_server.py",
+   "rule": "rate transition holds",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "proto-endian",
+   "file": "protocol.py",
+   "rule": "little endian",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "proto-frame-order",
+   "file": "protocol.py",
+   "rule": "column-major frames",
+   "parity": "survived",
+   "all": "killed"
+  },
+  {
+   "id": "proto-newest",
+   "file": "protocol.py",
+   "rule": "newest record used",
+   "parity": "survived",
+   "all": "killed"
+  }
+ ]
+}

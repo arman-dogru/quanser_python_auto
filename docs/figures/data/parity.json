@@ -1,0 +1,44 @@
+{
+ "abort": {
+  "ticks": 398206,
+  "sequences": 13,
+  "max_abs_error": 0.0,
+  "scenario_ticks": 362131
+ },
+ "arbiter": {
+  "ticks": 397910,
+  "sequences": 14,
+  "max_abs_error": 0.0,
+  "scenario_ticks": 362131
+ },
+ "confirm": {
+  "ticks": 398826,
+  "sequences": 13,
+  "max_abs_error": 0.0,
+  "scenario_ticks": 362131
+ },
+ "extract": {
+  "ticks": 207,
+  "sequences": 2,
+  "max_abs_error": 0.0,
+  "scenario_ticks": 0
+ },
+ "gate": {
+  "ticks": 398238,
+  "sequences": 14,
+  "max_abs_error": 0.0,
+  "scenario_ticks": 362131
+ },
+ "grid": {
+  "ticks": 405352,
+  "sequences": 12,
+  "max_abs_error": 1.1102230246251565e-16,
+  "scenario_ticks": 362131
+ },
+ "mscomm": {
+  "ticks": 248,
+  "sequences": 2,
+  "max_abs_error": 0.0,
+  "scenario_ticks": 0
+ }
+}

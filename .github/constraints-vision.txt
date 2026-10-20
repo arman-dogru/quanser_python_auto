@@ -1,0 +1,6 @@
+# Versions the vision interop job was verified with (CPU wheels for torch).
+torch==2.14.1
+torchvision==0.29.1
+ultralytics==8.4.183
+opencv-python-headless==5.0.0.93
+pillow==13.0.0

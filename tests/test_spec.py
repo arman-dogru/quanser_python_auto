@@ -28,7 +28,7 @@ def cmd(root):
 
 
 def _src(spec, dst):
-    return [ln["src"] for ln in spec["lines"] if ln["dst"] == dst]
+    return [ln["src"] for ln in spec["wiring"] if ln["dst"] == dst]
 
 
 def test_spec_is_fresh(root):

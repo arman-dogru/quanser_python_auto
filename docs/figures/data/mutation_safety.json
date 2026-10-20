@@ -1,0 +1,257 @@
+{
+ "sweep": "safety",
+ "mutants": 40,
+ "summary": {
+  "all": {
+   "killed": 40,
+   "killed-error": 0,
+   "timeout": 0,
+   "survived": 0
+  }
+ },
+ "survivors": [],
+ "equivalent": {},
+ "seconds": 20.3,
+ "results": [
+  {
+   "id": "pg-nan",
+   "file": "safety.py",
+   "rule": "non-finite pose refused",
+   "all": "killed"
+  },
+  {
+   "id": "pg-stale",
+   "file": "safety.py",
+   "rule": "stale pose -> lost",
+   "all": "killed"
+  },
+  {
+   "id": "pg-lost-tracking",
+   "file": "safety.py",
+   "rule": "lost sample has tracking 0",
+   "all": "killed"
+  },
+  {
+   "id": "pg-catch",
+   "file": "safety.py",
+   "rule": "garbage pose objects caught",
+   "all": "killed"
+  },
+  {
+   "id": "vg-finite",
+   "file": "safety.py",
+   "rule": "non-finite vision refused",
+   "all": "killed"
+  },
+  {
+   "id": "vg-flag",
+   "file": "safety.py",
+   "rule": "detected must be 0/1",
+   "all": "killed"
+  },
+  {
+   "id": "vg-frame",
+   "file": "safety.py",
+   "rule": "frame integer >= 0",
+   "all": "killed"
+  },
+  {
+   "id": "vg-conf",
+   "file": "safety.py",
+   "rule": "confidence in [0,1]",
+   "all": "killed"
+  },
+  {
+   "id": "vg-future",
+   "file": "safety.py",
+   "rule": "future timestamps refused",
+   "all": "killed"
+  },
+  {
+   "id": "vg-stale",
+   "file": "safety.py",
+   "rule": "stale observation refused",
+   "all": "killed"
+  },
+  {
+   "id": "vg-resync",
+   "file": "safety.py",
+   "rule": "resync after 3 structural",
+   "all": "killed"
+  },
+  {
+   "id": "vg-resync-flag",
+   "file": "safety.py",
+   "rule": "resync requests reconnect",
+   "all": "killed"
+  },
+  {
+   "id": "vg-accept-reset",
+   "file": "safety.py",
+   "rule": "accepted record resets counter",
+   "all": "killed"
+  },
+  {
+   "id": "jg-stale",
+   "file": "safety.py",
+   "rule": "stale joystick -> disconnected",
+   "all": "killed"
+  },
+  {
+   "id": "jg-buttons",
+   "file": "safety.py",
+   "rule": "32 buttons required",
+   "all": "killed"
+  },
+  {
+   "id": "jg-finite",
+   "file": "safety.py",
+   "rule": "finite joystick required",
+   "all": "killed"
+  },
+  {
+   "id": "og-estop",
+   "file": "safety.py",
+   "rule": "E-stop from operator",
+   "all": "killed"
+  },
+  {
+   "id": "og-arm",
+   "file": "safety.py",
+   "rule": "arm from operator",
+   "all": "killed"
+  },
+  {
+   "id": "og-issue",
+   "file": "safety.py",
+   "rule": "joystick issue from operator",
+   "all": "killed"
+  },
+  {
+   "id": "og-mode",
+   "file": "safety.py",
+   "rule": "LAND only in AUTOLAND",
+   "all": "killed"
+  },
+  {
+   "id": "og-autoland-arm",
+   "file": "safety.py",
+   "rule": "LAND only while armed",
+   "all": "killed"
+  },
+  {
+   "id": "og-dryrun",
+   "file": "safety.py",
+   "rule": "dry-run sends nothing",
+   "all": "killed"
+  },
+  {
+   "id": "og-geofence",
+   "file": "safety.py",
+   "rule": "geofence enforced",
+   "all": "killed"
+  },
+  {
+   "id": "og-height",
+   "file": "safety.py",
+   "rule": "height range enforced",
+   "all": "killed"
+  },
+  {
+   "id": "og-step",
+   "file": "safety.py",
+   "rule": "centering step limit",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-last",
+   "file": "safety.py",
+   "rule": "fault holds last good pose",
+   "all": "killed"
+  },
+  {
+   "id": "og-measured-nan",
+   "file": "safety.py",
+   "rule": "non-finite measured -> no tracking",
+   "all": "killed"
+  },
+  {
+   "id": "og-bool",
+   "file": "safety.py",
+   "rule": "operator triggers coerced to 0/1",
+   "all": "killed"
+  },
+  {
+   "id": "og-desired-finite",
+   "file": "safety.py",
+   "rule": "non-finite desired refused",
+   "all": "killed"
+  },
+  {
+   "id": "rt-failstop",
+   "file": "runtime.py",
+   "rule": "exceptions fail-stop",
+   "all": "killed"
+  },
+  {
+   "id": "rt-latched",
+   "file": "runtime.py",
+   "rule": "failure latched",
+   "all": "killed"
+  },
+  {
+   "id": "rt-guard-pose",
+   "file": "runtime.py",
+   "rule": "pose guard on path",
+   "all": "killed"
+  },
+  {
+   "id": "rt-guard-joy",
+   "file": "runtime.py",
+   "rule": "joystick guard on path",
+   "all": "killed"
+  },
+  {
+   "id": "sv-disconnect",
+   "file": "io/serve.py",
+   "rule": "fail-stop disconnects Commander",
+   "all": "killed"
+  },
+  {
+   "id": "sv-overrun",
+   "file": "io/serve.py",
+   "rule": "overrun fail-stops",
+   "all": "killed"
+  },
+  {
+   "id": "sv-resync",
+   "file": "io/serve.py",
+   "rule": "resync closes vision socket",
+   "all": "killed"
+  },
+  {
+   "id": "sv-dryrun",
+   "file": "io/serve.py",
+   "rule": "only gated packets sent",
+   "all": "killed"
+  },
+  {
+   "id": "so-partial",
+   "file": "io/sockets.py",
+   "rule": "partial write completed before next packet",
+   "all": "killed"
+  },
+  {
+   "id": "so-size",
+   "file": "io/sockets.py",
+   "rule": "112-byte payload enforced",
+   "all": "killed"
+  },
+  {
+   "id": "so-drain",
+   "file": "io/sockets.py",
+   "rule": "vision backlog drained",
+   "all": "killed"
+  }
+ ]
+}

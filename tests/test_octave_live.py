@@ -54,11 +54,16 @@ def test_python_matches_this_octave(root, tmp_path):
     assert n > 40000
 
 
-def test_fixtures_regenerate_byte_identically(root):
-    """Committed outputs were produced with Octave 9.4; another Octave/BLAS
-    build may round the centring products differently, which can cascade."""
-    if not _octave_version().startswith("9."):
-        pytest.skip(f"fixtures were generated with Octave 9.4, this is {_octave_version()}")
+def test_fixtures_regenerate_from_octave(root):
+    """Regenerate every committed fixture with this Octave and compare.
+
+    The committed outputs were produced with Octave 9.4, where they must
+    regenerate byte for byte. Another Octave/BLAS build may round the 2x2
+    centring products in the last bit; there the check still runs and
+    allows at most 1e-12 (anything larger fails)."""
     r = subprocess.run([sys.executable, str(root / "tools" / "make_fixtures.py"), "--check"], cwd=root,
                        capture_output=True, text=True, timeout=900)
     assert r.returncode == 0, r.stdout + r.stderr
+    if _octave_version().startswith("9."):
+        assert "byte-identically" in r.stdout, r.stdout
+    print(_octave_version(), r.stdout.strip().splitlines()[-1])

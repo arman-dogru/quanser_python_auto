@@ -11,9 +11,9 @@ requires-python = ">=3.10"
 dependencies = ["numpy>=1.24"]
 
 [project.optional-dependencies]
-vision = ["ultralytics", "opencv-python", "Pillow"]
+vision = ["ultralytics>=8.4,<9", "opencv-python>=4.8", "Pillow>=10"]
 plots = ["matplotlib>=3.7"]
-dev = ["pytest>=7", "ruff>=0.5", "matplotlib>=3.7"]
+dev = ["pytest>=7,<10", "ruff>=0.17,<0.18", "matplotlib>=3.7"]
 
 [project.scripts]
 qautoland = "qdrone_autoland.cli:main"
