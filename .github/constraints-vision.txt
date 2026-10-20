@@ -1,4 +1,5 @@
-# Versions the vision interop job was verified with (CPU wheels for torch).
+# Versions the vision interop job was verified with. torch/torchvision are
+# installed first from the CPU wheel index at these versions (see ci.yml).
 torch==2.14.1
 torchvision==0.29.1
 ultralytics==8.4.183

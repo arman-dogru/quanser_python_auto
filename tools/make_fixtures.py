@@ -422,11 +422,11 @@ def main(argv=None) -> int:
             cmp = filecmp.dircmp(tmp, OUT)
             bad = []
             def walk(c, prefix=""):
-                bad.extend(prefix + f for f in c.left_only + c.right_only + c.diff_files)
+                bad.extend(prefix + f for f in c.left_only + c.right_only)   # contents compared below
                 for name, sub in c.subdirs.items():
                     walk(sub, prefix + name + "/")
             walk(cmp)
-            # dircmp compares shallowly by stat; confirm content explicitly
+            # Content is compared explicitly (dircmp's diff_files is only shallow)
             last_bits = []
             for f in [*tmp.rglob("*.csv"), *tmp.rglob("*.csv.gz")]:
                 g = OUT / f.relative_to(tmp)
@@ -466,12 +466,10 @@ def main(argv=None) -> int:
 
 
 def _close(a: bytes, b: bytes, tol: float = 1e-12) -> bool:
+    from qdrone_autoland.parity import compare     # NaN == NaN, equal infinities, else max abs error
     x = np.loadtxt(a.decode().splitlines(), delimiter=",", ndmin=2)
     y = np.loadtxt(b.decode().splitlines(), delimiter=",", ndmin=2)
-    if x.shape != y.shape or (np.isnan(x) != np.isnan(y)).any():
-        return False
-    m = ~np.isnan(x)
-    return bool(np.all(np.abs(x[m] - y[m]) <= tol) and np.array_equal(np.isinf(x), np.isinf(y)))
+    return compare(x, y) <= tol
 
 
 def _content(p: Path) -> bytes:

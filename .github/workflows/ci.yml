@@ -76,7 +76,7 @@ jobs:
           python-version: "3.12"
       - name: Install (CPU torch, headless OpenCV)
         run: |
-          pip install -c .github/constraints-vision.txt torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install torch==2.14.1 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cpu
           pip install -c .github/constraints-vision.txt ultralytics opencv-python-headless Pillow
           pip install -e ".[dev]"
       - name: Vision interop tests
