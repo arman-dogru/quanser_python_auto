@@ -107,8 +107,10 @@ def test_no_scenario_emits_gate_faults(name):
 # A subset of the 12x8 pad grid swept by tools/pad_sweep.py (full sweep: 94/96
 # land, 0 gate faults).  It covers pads confirmed while the vehicle is still
 # far short of its waypoint, which is where a centring-entry check anchored on
-# the wrong pose stalls the mission.
-PAD_SUBSET = [(0.1, -0.95), (-0.3, 0.407), (0.9, 0.95), (-1.1, 0.95), (1.1, -0.95), (0.5, -0.136), (-0.7, -0.679)]
+# the wrong pose stalls the mission, and pads confirmed at the area's edge.
+PAD_SUBSET = [(0.1, -0.95), (-0.3, 0.407), (0.9, 0.95), (-1.1, 0.95), (1.1, -0.95), (0.5, -0.136), (-0.7, -0.679),
+              # confirmed while the vehicle has overshot the flight area's edge (y = +-1.0 m) by a hair
+              (-0.7, 0.95), (0.3, -0.679)]
 
 
 @pytest.mark.parametrize("pad", PAD_SUBSET, ids=[f"{x:+.2f},{y:+.3f}" for x, y in PAD_SUBSET])
@@ -121,3 +123,29 @@ def test_autoland_lands_across_pad_positions(pad):
 def test_pad_grid_matches_sweep_definition():
     pads = sim.pad_grid()
     assert len(pads) == 96 and pads[0] == (-1.1, -0.95) and pads[-1] == (1.1, 0.95)
+
+
+def test_centring_fault_during_autonomous_land_never_raises_takeoff_land(monkeypatch):
+    """Closed loop: the model's desired x is NaN for 2.5 s starting 50 ticks
+    after the gate applied LAND. Trigger 2 must stay lowered (raising it
+    mid-landing is an E-stop to the Commander) and the vehicle still lands."""
+    import dataclasses as dc
+
+    from qdrone_autoland import safety
+    orig = safety.OutputGate.step
+    state = {"k": 0, "land_k": None}
+
+    def step(self, out):
+        state["k"] += 1
+        if state["land_k"] is None and self.land_active:
+            state["land_k"] = state["k"]
+        if state["land_k"] is not None and state["land_k"] + 50 < state["k"] < state["land_k"] + 2600:
+            out = dc.replace(out, desired_pose=(float("nan"),) + tuple(out.desired_pose[1:]))
+        return orig(self, out)
+    monkeypatch.setattr(safety.OutputGate, "step", step)
+    r = sim.run(dc.replace(sim.SCENARIOS["nominal-autoland"], duration=120.0))
+    lk = state["land_k"]
+    t2, gs = r.signals["trig2"], r.signals["gate_status"]
+    assert lk is not None and "landed" in r.events
+    assert max(gs[lk:]) == 2.0                                                      # it did escalate
+    assert all(t2[k] == 0.0 for k in range(lk, len(t2))), "Takeoff/Land raised during LAND"
