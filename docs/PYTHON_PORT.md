@@ -34,12 +34,12 @@ flowchart LR
 | Original MATLAB tests | `test_phase9_landing_gate`, `test_phase9_abort_diagnostics` pass **unmodified** in Octave. The phase 10 dry run's behavioural half is re-run in Octave and its structural half is checked on the parsed model | `tools/octave/run_original_tests.m`, `tests/test_spec.py` |
 | Model code vs `matlab/phase*.txt` templates | identical once `config_autonomous()` is substituted | `tools/octave/check_templates.m` |
 | Wire formats (`<6d`, `<14d`, `<d`, column-major frames) | done | protocol tests; `yolo_pad_direct_stream_fresh.py` runs unmodified as a subprocess, fed synthetic frames over TCP 18910 |
-| Tests | 148 pytest tests (Octave and vision ones skip without their tools) + the original `python/test_camera_freshness.py` | CI: lint + tests, Octave, vision, Windows |
-| Safety layer (guards, output gate, fail-stop) | on the only runtime path | [SAFETY.md](SAFETY.md), fuzz and scenario tests; safety mutation sweep: 63 of 66 mutants killed (40 original, 21 written independently, 5 for checks added since); the 3 survivors are argued equivalent in `tools/mutation_sweep.py` |
+| Tests | 165 pytest tests (Octave and vision ones skip without their tools) + the original `python/test_camera_freshness.py` | CI: lint + tests, Octave, vision, Windows |
+| Safety layer (guards, output gate, fail-stop) | on the only runtime path | [SAFETY.md](SAFETY.md), fuzz and scenario tests; safety mutation sweep: 72 of 75 mutants killed (40 original, 21 written independently, 14 for checks added since); the 3 survivors are argued equivalent in `tools/mutation_sweep.py` |
 | Logic mutation sweep | 62 of 66 killed (45 by the Octave fixtures alone). The 4 survivors are argued equivalent in `tools/mutation_sweep.py` | [mutation_logic.json](figures/data/mutation_logic.json) |
 | Phase 10 autonomous LAND | ported faithfully, **off by default** (`--mode monitor`) | arbiter parity + scenarios |
 | Sockets: mission server <-> Commander, <- publisher | done, loopback-tested | `tests/test_sockets.py`, `qautoland loopback` |
-| Real-time loop | 1 kHz model time, hybrid sleep: about 10-20 % of one core on Linux, tick lag p50 35 µs, p99 50 µs (5 s dry runs); the Windows CI runner measured 23 % CPU and p99 0.34 ms | `tests/test_sockets.py`; Windows CI job runs a 5 s dry run |
+| Real-time loop | 1 kHz model time, hybrid sleep: about 10-20 % of one core on Linux, tick lag p50 35 µs, p99 50 µs (5 s dry runs). Windows CI runner (run 39493996791): 15 % of one core (0.75 s CPU in 5.0 s), tick lag p50 0.07 ms, p99 0.32 ms | `tests/test_sockets.py`; the Windows CI job runs a 5 s dry run and fails if tick lag p99 reaches 5 ms |
 | OptiTrack NatNet client, game-controller reader | **not implemented** (interfaces only, `io/sources.py`) | |
 | Flight / QUARC / Simulink | **not run** | |
 
@@ -54,6 +54,11 @@ The nominal mission: grid search, YOLO confirmation, constant-altitude centring,
 descent 0.70 -> 0.60 -> 0.55 m, ten fresh observations, then LAND. It runs in
 closed loop against a simple stand-in vehicle and camera (`src/qdrone_autoland/sim.py`).
 The stand-in is not a flight model.
+
+Across a 12 x 8 grid of pad positions (`python tools/pad_sweep.py`), 94 of
+96 pads land with zero output-gate faults and at most 23 mm touchdown error
+([pad_sweep.json](figures/data/pad_sweep.json)). The other two are never
+confirmed by the model (below).
 
 ![Nominal mission: top view of the grid search ending on the pad, and a timeline of height, desired height and descent stage, with pad confirmed, landing ready, LAND latched and the Takeoff/Land bit sent.](figures/nominal_mission.png)
 
@@ -96,6 +101,7 @@ python tools/make_fixtures.py --check        # regenerate and compare (byte-iden
 python tools/make_fixtures.py --scenarios outputs/scenario_parity   # the eight closed-loop scenarios through Octave
 python tools/mutation_sweep.py --sweep logic  --json docs/figures/data/mutation_logic.json
 python tools/mutation_sweep.py --sweep safety --json docs/figures/data/mutation_safety.json
+python tools/pad_sweep.py --json docs/figures/data/pad_sweep.json   # 96 closed-loop missions, a few minutes
 python tools/make_figures.py
 ```
 
@@ -115,8 +121,18 @@ None was changed. The port reproduces them, and `test_sim.py` pins several of th
   The centring origin is NaN as well, so the model's 0.5 m displacement limit
   never fires. This is reachable if the confirmation block captures a
   non-finite measured pose. In the port, the pose guard keeps NaN out of the
-  model, and the output gate refuses the NaN yaw and any jump over 0.5 m on
-  the centring entry tick, and keeps its own 0.5 m limit around a finite origin.
+  model, and the output gate refuses the NaN yaw and any centring entry more
+  than 0.5 m from where the vehicle is, and keeps its own 0.5 m limit around
+  a finite origin ([SAFETY.md](SAFETY.md#centring-checks)).
+* The YOLO confirmation needs 5 consecutive valid frames (any invalid frame
+  resets the count), and the camera runs at 5 Hz. A pad near the edge of the
+  search pattern can be in view for too short a time while the vehicle flies
+  past. In the stand-in sweep, pads at (-1.1, -0.407) and (-1.1, -0.136) are
+  in the camera footprint only on the leg through waypoint (-1.2, -0.333) and
+  give 5 and 10 detections, in runs of at most 4. They are never confirmed;
+  the search finishes and the model holds at its last waypoint (-1.2, 1.0,
+  0.7). The port does the same as the model here, and the output gate refuses
+  nothing in either run.
 * The mission server's comm-loss warning is display only, and it appears only
   after the first recovery (Triggered Subsystem x Product). Its rule is
   `~(state == 2 && error >= 0)`, evaluated only after the first second

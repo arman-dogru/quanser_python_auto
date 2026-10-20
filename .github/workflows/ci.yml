@@ -95,4 +95,17 @@ jobs:
       - name: Tests
         run: pytest -q -m "not vision and not octave"
       - name: serve --mode dry-run for 5 s (timing and CPU)
-        run: qautoland serve --mode dry-run --duration 5
+        shell: bash
+        run: |
+          qautoland serve --mode dry-run --duration 5 > serve-stats.json
+          cat serve-stats.json
+          # Generous bound: 15x the measured Windows p99 (0.32 ms); catches a
+          # loop that has fallen back to coarse OS sleeps or busy work per tick.
+          python - <<'PY'
+          import json
+          st = json.load(open("serve-stats.json"))
+          print(f"CPU {st['cpu_s'] / st['wall_s']:.0%} of one core, tick lag p99 {st['lag_p99_s'] * 1e3:.2f} ms")
+          assert st["stopped_reason"] is None, st["stopped_reason"]
+          assert st["ticks"] >= 4990, st["ticks"]
+          assert st["lag_p99_s"] < 0.005, f"tick lag p99 {st['lag_p99_s'] * 1e3:.2f} ms >= 5 ms"
+          PY
