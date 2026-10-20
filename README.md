@@ -1,37 +1,43 @@
-# Quanser autonomous landing
+# QDrone Autonomous Landing — Python port baseline
 
-Local source repository prepared for a subsequent Python port.
+Source: `E:\berkay\Quanser_Clean\QDrone_Autonomous_Landing`.
+This replaces the unrelated synced-project snapshot previously committed here.
 
-## Baseline and status
+## Selected current implementation
 
-The selected baseline is `reference/simulink/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly.slx`, the most advanced named integration stage supplied. Its embedded YOLOPoseCommandGenerator matches the preceding integration and pose-command models. This selection is based on static source inspection, not a flight test or MATLAB execution. Stage 6 is monitor-only by name; descent is explicitly disabled in its controller. This snapshot does not establish a complete working autonomous landing system.
+- Mission server: `simulink/Mission_Server_QDrone_YOLO_Autonomous_Land.mdl` (Phase 10).
+- Vehicle: `simulink/QDrone_YOLO_Direct_Stream_Commander.mdl`.
+- Ground vision: `python/yolo_pad_direct_stream_fresh.py`, with its local helper modules included. The original `yolo_pad_direct_stream.py` is also retained; run only one vision publisher at a time.
+- Trained detector: `models/qdrone_landing_pad_yolo11n_v3_best.pt`.
+- Mission parameters: `matlab/config_autonomous.m`.
+- Site calibration: `config/Calibration_2026-08-11.cal` and `config/RigidBody_01.tra`.
 
-Start the Python port from the extracted Stage 6 controller in `reference/extracted/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly/`. Keep the original Simulink model as the reference for wiring, communication, interlocks, and coordinate transforms.
+This is a copy of the user's current working project, selected by source inspection. No flight, MATLAB model update, or hardware build was performed during packaging. The protected `working_grid_search_2026-08-13` baseline has its own recorded working-status notes.
 
-## Contents
+## Included files
 
-- `reference/simulink/`: Stage 6 baseline plus all four preceding test/integration models for comparison.
-- `reference/extracted/`: every embedded MATLAB function from each model, in plain text. File prefixes identify the originating chart.
-- `reference/matlab/legacy/`: earlier grayscale detector, grid search, and landing controller prototype. These use a different image-to-motion mapping from the later YOLO models.
-- `reference/experiments/`: original live script and screenshot.
-- `tools/dataset_legacy/`: original Python preparation/evaluation scripts, retained for algorithm reference. They use machine-specific E: paths; some delete their configured output directories. Review and parameterize them before running.
-- `models/yolo11n.pt`: supplied checkpoint, preserved byte-for-byte. Filename alone does not prove it is trained for landing pads. No landing-pad best.pt or training metadata was supplied.
-- `docs/PYTHON_PORT.md`: migration contracts and missing inputs.
-- `docs/source_manifest.json`: SHA-256 checksums, source mapping, and embedded function provenance.
+The original folder layout is preserved so relative imports, model generation, weights, and calibration dependencies remain available. All handwritten MATLAB/Python sources, controller templates, tests, source-original models, intermediate phase models, and the protected working grid-search baseline are included. Earlier phases are dependencies and comparison references, not alternative current entry points.
 
-All supplied source files are included, with older experiments separated from the baseline. Synced project originals were left untouched. No Python flight controller has been implemented yet.
+Generated QUARC/C/C++ builds, compiled targets, model caches/autosaves, recordings, runtime detection files, logs, and duplicate backup directories are excluded. The original milestone-1 README is preserved in `docs/ORIGINAL_MILESTONE1_README.md`; it predates the current landing implementation.
 
-## Verification
+## Python vision setup
 
-Run `python tools/verify_snapshot.py` from this repository to verify all original file copies and extracted embedded functions. This uses only the Python standard library. MATLAB/Simulink and hardware validation remain outstanding.
-
-## Push to your online repository
-
-The local Git repository uses branch `main` and has no remote configured. Create an empty online repository, then run from this folder:
+From this repository root:
 
 ```powershell
-git remote add origin <your-repository-url>
-git push -u origin main
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m unittest discover -s python -p "test_*.py"
+python python/yolo_pad_direct_stream_fresh.py
 ```
 
-No project license was supplied; copied Quanser/library content and checkpoint retain their existing rights. No new license is asserted by this repository.
+The direct stream path receives Commander camera frames on TCP 18910 and publishes observations on TCP 18901. This command starts vision only; it does not launch the MATLAB mission server or vehicle. `python/qdrone_camera_streamer.py` is a separate vehicle-side alternative requiring the separately installed Quanser Python SDK; it is not needed for the existing direct-stream Commander path.
+
+## Porting to Python
+
+Use the saved Phase 10 model as the behavioral reference, with `matlab/phase8_grid_manager_code.txt`, `phase9_landing_gate_code.txt`, `phase9_abort_diagnostic_code.txt`, and `phase10_autoland_arbiter_code.txt`. Preserve the existing packet layouts, camera freshness logic, coordinate transforms, camera offset, flight bounds, operator triggers, communication-loss behavior, and landing-readiness gate. Existing phase 9 and phase 10 MATLAB tests are included as behavioral specifications.
+
+The build scripts form a phase chain and some refuse to overwrite existing models. Do not rerun the full chain against this snapshot without reading each script. The saved models may contain absolute lab paths; resolve those to the copied calibration files in MATLAB before building on another machine. MATLAB R2021b, QUARC, Quanser libraries, Motive/OptiTrack, and the lab hardware remain external prerequisites. Python dependencies are listed without invented version pins; the original environment did not supply a lockfile.
+
+`docs/source_manifest.json` records original file hashes and paths. Apart from this README, copied source files are unchanged. No Python flight-control port has been added during packaging.

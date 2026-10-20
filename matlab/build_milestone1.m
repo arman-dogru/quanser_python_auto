@@ -1,0 +1,306 @@
+function build_milestone1(doBuild)
+%BUILD_MILESTONE1 Create the roadmap's fixed-hover one-QDrone model pair.
+% Run from MATLAB R2021b with QUARC installed.
+%   build_milestone1(false)  creates and updates the models
+%   build_milestone1(true)   also invokes the configured QUARC builds
+
+if nargin < 1
+    doBuild = false;
+end
+
+% Allow the builder to be run repeatedly in the same MATLAB session.
+generatedModels = {'Mission_Server_QDrone_Autonomous', ...
+    'QDrone_Autonomous_Commander'};
+for k = 1:numel(generatedModels)
+    if bdIsLoaded(generatedModels{k})
+        close_system(generatedModels{k}, 0);
+    end
+end
+
+projectRoot = fileparts(fileparts(mfilename('fullpath')));
+sourceDir = fullfile(projectRoot, 'simulink', 'source_originals');
+modelDir = fullfile(projectRoot, 'simulink');
+configDir = fullfile(projectRoot, 'config');
+
+hostSource = fullfile(sourceDir, 'MS_LF_QBot2_QDrone_Joystick_FrSky.mdl');
+commanderSource = fullfile(sourceDir, 'Commander_Stabilizer_QDrone.mdl');
+hostTarget = fullfile(modelDir, 'Mission_Server_QDrone_Autonomous.mdl');
+commanderTarget = fullfile(modelDir, 'QDrone_Autonomous_Commander.mdl');
+calibrationFile = fullfile(configDir, 'Calibration_2026-08-11.cal');
+rigidBodyFile = fullfile(configDir, 'RigidBody_01.tra');
+
+assert(isfile(hostSource), 'Missing host source: %s', hostSource);
+assert(isfile(commanderSource), 'Missing Commander source: %s', commanderSource);
+assert(isfile(calibrationFile), 'Missing calibration file: %s', calibrationFile);
+assert(isfile(rigidBodyFile), 'Missing rigid-body file: %s', rigidBodyFile);
+
+createHost(hostSource, hostTarget, calibrationFile, rigidBodyFile);
+createCommander(commanderSource, commanderTarget);
+
+updateModel('Mission_Server_QDrone_Autonomous');
+updateModel('QDrone_Autonomous_Commander');
+
+if doBuild
+    slbuild('Mission_Server_QDrone_Autonomous');
+    slbuild('QDrone_Autonomous_Commander');
+end
+
+save_system('Mission_Server_QDrone_Autonomous');
+save_system('QDrone_Autonomous_Commander');
+fprintf('\nMilestone 1 models created in:\n%s\n', modelDir);
+end
+
+function createHost(sourceFile, targetFile, calibrationFile, rigidBodyFile)
+[~, sourceName] = fileparts(sourceFile);
+removeShadowingPaths(sourceFile);
+load_system(sourceFile);
+save_system(sourceName, targetFile);
+close_system(sourceName, 0);
+model = 'Mission_Server_QDrone_Autonomous';
+
+mission = firstBlock(model, 'MISSION SERVER');
+
+% Remove the top-level QBot communication execution path.
+deleteBlocksContaining(model, {'Communication - QBot', 'Display1'});
+
+% Remove QBot/follower command generation and QBot-only logging from the
+% retained mission subsystem. Deleting a block also removes its lines.
+deleteBlocksContaining(mission, {
+    'QBot', ...
+    'Generate Follower Trajectory', ...
+    'Raw joystick to Linear and Angular Velocity Commands', ...
+    'Triggered Subsystem1', ...
+    'Subtract1', ...
+    'Product1', ...
+    'Scope2', ...
+    'Mux1', ...
+    'To Host File'});
+
+% The original communication alarm OR'ed QDrone and QBot faults. Retain only
+% the QDrone alarm after the QBot branch is removed.
+deleteBlocksExact(mission, {'Logical Operator'});
+qdroneCommIssue = firstBlock(mission, 'Product');
+commDisplay = firstBlock(mission, 'Communication Issue');
+% Depending on QUARC library-link resolution, this block can be reported as
+% either Reference or SubSystem. Its name is stable, so do not constrain type.
+commMessage = firstBlock(mission, 'Show Message on Host');
+safeAddLine(mission, qdroneCommIssue, 1, commDisplay, 1);
+safeAddLine(mission, qdroneCommIssue, 1, commMessage, 1);
+
+% Remove the old three-way follower/custom/home selector. The fixed-hover
+% desired pose comes directly from the retained Quanser home-pose capture.
+deleteBlocksExact(mission, {'Switch','Mode switch','Custom Mode','Home Mode', ...
+    'Enable','Disable','Enable switch','isTracking1','Mux','Constant'});
+
+% FrSky trigger outputs remain active; only the unused raw joystick-axis
+% output is explicitly terminated in this fixed-position milestone.
+joystick = firstBlock(mission, 'JOYSTICK');
+missionName = getfullname(mission);
+unusedJoystick = add_block('simulink/Sinks/Terminator', ...
+    [missionName '/Unused Joystick Axes'], 'MakeNameUnique', 'on');
+safeAddLine(mission, joystick, 3, unusedJoystick, 1);
+
+measurementConditioning = firstBlock(mission, 'Measurement Conditioning');
+unusedCorrectedPose = add_block('simulink/Sinks/Terminator', ...
+    [missionName '/Unused Corrected Pose Log'], 'MakeNameUnique', 'on');
+safeAddLine(mission, measurementConditioning, 3, unusedCorrectedPose, 1);
+
+% Permanent external-mode diagnostic for boundary calibration. This is
+% connected directly to the same conditioned [x,y,z,yaw] signal sent to the
+% Commander, so it cannot accidentally display raw Motive coordinates.
+poseDisplay = add_block('simulink/Sinks/Display', ...
+    [missionName '/Measured Pose Display [x y z yaw]'], ...
+    'Position', [1030 205 1190 255], ...
+    'Decimation', '1', ...
+    'MakeNameUnique', 'off');
+safeAddLine(mission, measurementConditioning, 1, poseDisplay, 1);
+
+homePose = firstBlock(mission, 'Calculate Home Pose');
+desiredOut = firstBlock(mission, 'Desired');
+safeAddLine(mission, homePose, 1, desiredOut, 1);
+
+% The retained subsystem captures [startX,startY,startYaw] on the original
+% arm trigger and substitutes only the desired altitude.
+homeHeight = firstBlock(mission, 'Home height');
+set_param(homeHeight, 'Value', '0.70');
+
+vehicleId = firstBlock(mission, 'Vehicle ID - QDrone');
+set_param(vehicleId, 'Value', '1');
+
+dataServer = firstBlock(mission, 'Data Server');
+opti = firstBlock(dataServer, 'OptiTrack Trackables');
+set_param(opti, ...
+    'calibration_file', calibrationFile, ...
+    'rigid_body_file', rigidBodyFile, ...
+    'rigid_body_ids', '1');
+configureSingleBodyDataServer(dataServer);
+
+% The retained raw tracking display originally selected element 14 from a
+% two-body [position,orientation,tracking] vector. One body has seven values.
+rawTrackingBlocks = find_system(mission, 'FindAll', 'on', 'SearchDepth', 1, ...
+    'Type', 'Block', 'BlockType', 'Selector', 'Name', 'isTracking');
+assert(~isempty(rawTrackingBlocks), 'Raw QDrone tracking Selector not found.');
+rawTracking = rawTrackingBlocks(1);
+set_param(rawTracking, 'InputPortWidth', '7', 'Indices', '[7]');
+
+% Preserve the original packet ordering and change only the QDrone server
+% argument from the follower port to the single-drone port expected by the
+% Commander (tcpip port 18001).
+set_param(model, 'ExtModeMexArgs', ...
+    '''-w -d %d -uri %u -URI_Follower tcpip://localhost:18001''');
+
+deleteDanglingLines(model);
+save_system(model, targetFile);
+end
+
+function createCommander(sourceFile, targetFile)
+[~, sourceName] = fileparts(sourceFile);
+removeShadowingPaths(sourceFile);
+load_system(sourceFile);
+save_system(sourceName, targetFile);
+close_system(sourceName, 0);
+model = 'QDrone_Autonomous_Commander';
+
+% Preserve all Quanser controller, FSM, watchdog, battery, tracking,
+% saturation, and motor/stabilizer subsystems. Only communication deployment
+% parameters are made explicit for QDrone 192.168.2.15.
+set_param(model, 'ExtModeMexArgs', ...
+    ' ''-w -d /tmp -uri %u -URI_Host tcpip://192.168.2.11:18001'',''tcpip://192.168.2.15:17001?retries=10''');
+save_system(model, targetFile);
+end
+
+function updateModel(model)
+load_system(model);
+set_param(model, 'SimulationCommand', 'update');
+fprintf('Updated model: %s\n', model);
+end
+
+function configureSingleBodyDataServer(dataServer)
+% OptiTrack outputs position[3], orientation[3], tracking[1] for one body.
+% Keep Quanser's QDrone frame correction and remove the parallel QBot path.
+deleteBlocksExact(dataServer, {'Selector','Selector1','Selector2', ...
+    'Data Type Conversion2'});
+
+qdronePosition = firstBlock(dataServer, 'Selector4');
+qdroneOrientation = firstBlock(dataServer, 'Selector5');
+qdroneTracking = firstBlock(dataServer, 'Selector3');
+set_param(qdronePosition, 'InputPortWidth', '3', 'Indices', '[1:3]');
+set_param(qdroneOrientation, 'InputPortWidth', '3', 'Indices', '[1:3]');
+set_param(qdroneTracking, 'InputPortWidth', '1', 'Indices', '[1]');
+
+qbotConvention = firstBlock(dataServer, 'QBot 2e');
+delete_block(qbotConvention);
+
+qdroneConvention = firstBlock(dataServer, 'Convention Correction');
+trackingConversion = firstBlock(dataServer, 'Data Type Conversion3');
+mux = find_system(dataServer, 'FindAll', 'on', 'SearchDepth', 1, ...
+    'Type', 'Block', 'BlockType', 'Mux', 'Name', 'Mux');
+assert(~isempty(mux), 'Localization Mux not found under %s.', dataServer);
+mux = mux(1);
+
+% Disconnect the former two-body destinations before reducing the Mux.
+ports = get_param(mux, 'PortHandles');
+for k = 1:numel(ports.Inport)
+    line = get_param(ports.Inport(k), 'Line');
+    if line ~= -1
+        delete_line(line);
+    end
+end
+set_param(mux, 'Inputs', '3');
+safeAddLine(dataServer, qdroneConvention, 1, mux, 1);
+safeAddLine(dataServer, qdroneConvention, 2, mux, 2);
+safeAddLine(dataServer, trackingConversion, 1, mux, 3);
+end
+
+function block = firstBlock(system, nameFragment)
+blocks = find_system(system, 'FindAll', 'on', 'SearchDepth', 1, 'Type', 'Block');
+systemHandle = get_param(system, 'Handle');
+blocks(blocks == systemHandle) = [];
+match = false(size(blocks));
+for k = 1:numel(blocks)
+    match(k) = contains(get_param(blocks(k), 'Name'), nameFragment, 'IgnoreCase', true);
+end
+blocks = blocks(match);
+assert(~isempty(blocks), 'Block containing "%s" not found under %s.', nameFragment, system);
+block = blocks(1);
+end
+
+function deleteBlocksContaining(system, fragments)
+blocks = find_system(system, 'FindAll', 'on', 'SearchDepth', 1, 'Type', 'Block');
+systemHandle = get_param(system, 'Handle');
+blocks(blocks == systemHandle) = [];
+for k = numel(blocks):-1:1
+    name = get_param(blocks(k), 'Name');
+    remove = false;
+    for j = 1:numel(fragments)
+        remove = remove || contains(name, fragments{j}, 'IgnoreCase', true);
+    end
+    if remove
+        delete_block(blocks(k));
+    end
+end
+end
+
+function deleteDanglingLines(model)
+% Deleting inherited branches can leave graphical line stubs. Remove only
+% lines lacking a valid source or destination; fully connected command and
+% safety signals remain untouched.
+lines = find_system(model, 'FindAll', 'on', 'Type', 'line');
+for k = numel(lines):-1:1
+    try
+        source = get_param(lines(k), 'SrcBlockHandle');
+        destinations = get_param(lines(k), 'DstBlockHandle');
+        validDestinations = destinations(destinations ~= -1);
+        if source == -1 || isempty(validDestinations)
+            delete_line(lines(k));
+        end
+    catch exception
+        % Removing a parent line can invalidate branch handles captured by
+        % find_system. Ignore only that expected stale-handle condition.
+        if ~contains(exception.message, 'Invalid Simulink object handle')
+            rethrow(exception);
+        end
+    end
+end
+end
+
+function removeShadowingPaths(sourceFile)
+% A Quanser applications folder may already be on the MATLAB path with a
+% model having the same root name. Remove only those shadowing directories;
+% the bundled source is loaded explicitly by absolute path afterward.
+[sourceDir, modelName] = fileparts(sourceFile);
+hits = which([modelName '.mdl'], '-all');
+if ischar(hits)
+    hits = {hits};
+end
+for k = 1:numel(hits)
+    hitDir = fileparts(hits{k});
+    if ~strcmpi(hitDir, sourceDir) && contains([path pathsep], [hitDir pathsep], 'IgnoreCase', true)
+        rmpath(hitDir);
+        fprintf('Temporarily removed shadowing model folder from MATLAB path: %s\n', hitDir);
+    end
+end
+end
+
+function deleteBlocksExact(system, names)
+for k = 1:numel(names)
+    blocks = find_system(system, 'FindAll', 'on', 'SearchDepth', 1, ...
+        'Type', 'Block', 'Name', names{k});
+    for j = numel(blocks):-1:1
+        delete_block(blocks(j));
+    end
+end
+end
+
+function safeAddLine(system, sourceBlock, sourcePort, destBlock, destPort)
+destHandles = get_param(destBlock, 'PortHandles');
+oldLine = get_param(destHandles.Inport(destPort), 'Line');
+if oldLine ~= -1
+    delete_line(oldLine);
+end
+sourceName = get_param(sourceBlock, 'Name');
+destName = get_param(destBlock, 'Name');
+systemName = getfullname(system);
+add_line(systemName, sprintf('%s/%d', sourceName, sourcePort), ...
+    sprintf('%s/%d', destName, destPort), 'autorouting', 'on');
+end

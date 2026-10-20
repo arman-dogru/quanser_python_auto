@@ -1,5 +1,6 @@
 * text=auto
+*.mdl -text
 *.slx binary
-*.mlx binary
 *.pt binary
-*.png binary
+*.cal -text
+*.tra -text
