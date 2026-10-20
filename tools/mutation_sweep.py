@@ -223,6 +223,51 @@ SAFETY = [
      "            self.pending = b\"\"\n            if self.pending:"),
     ("so-size", SOCK, "112-byte payload enforced", "        if len(payload) != COMMAND.size:\n", "        if False:\n"),
     ("so-drain", SOCK, "vision backlog drained", "            chunks.append(data)\n", "            chunks.append(data)\n            break\n"),
+    # Independent review mutants (22, one no longer applies: the height-step check was removed as dead code).
+    ("rv-estop-hold-2s", CFG, "E-stop hold 0.2 s", "estop_threshold_s: float = 0.2", "estop_threshold_s: float = 2.0"),
+    ("rv-estop-never-out", BLK, "E-stop reaches the triggers", "(ok * arm, ok * takeoff, float(estop), issue)",
+     "(ok * arm, ok * takeoff, 0.0, issue)"),
+    ("rv-issue-5-axes", BLK, "issue needs all six axes at -1", "all(a == -1.0 for a in axes)",
+     "all(a == -1.0 for a in axes[:5])"),
+    ("rv-takeoff-not-gated", BLK, "takeoff masked by joystick issue", "(ok * arm, ok * takeoff,", "(ok * arm, takeoff,"),
+    ("rv-issue-threshold-2s", CFG, "joystick issue after 0.2 s", "joystick_threshold_s: float = 0.2",
+     "joystick_threshold_s: float = 2.0"),
+    ("rv-jg-stale-10x", SAFE, "joystick stale window",
+     "now - self.last_time > self.stale_s:\n            if self.last_sample",
+     "now - self.last_time > 10 * self.stale_s:\n            if self.last_sample"),
+    ("rv-jg-malformed-keeps-last", SAFE, "malformed joystick forgets last good",
+     '            self.refused["malformed"] += 1\n            self.last_time, self.last_sample = None, None\n',
+     '            self.refused["malformed"] += 1\n'),
+    ("rv-pg-stale-10x", SAFE, "pose stale window", "if self.last_time is None or now - self.last_time > self.stale_s:",
+     "if self.last_time is None or now - self.last_time > 10 * self.stale_s:"),
+    ("rv-pg-tracking-forced", SAFE, "Motive tracking flag kept", "1.0 if trk > 0.5 else 0.0)", "1.0)"),
+    ("rv-vg-age-ignored", SAFE, "detection age used", "age = now - ts", "age = 0.0"),
+    ("rv-vg-stale-2x", SAFE, "vision stale 0.5 s", "if age > self.max_age:", "if age > 2 * self.max_age:"),
+    ("rv-vg-future-2x", SAFE, "future tolerance 50 ms", "if age < -self.future_tol:", "if age < -2 * self.future_tol:"),
+    ("rv-vg-frac-frame", SAFE, "fractional frame refused", "if frame < 0 or frame != math.floor(frame):",
+     "if frame < 0:"),
+    ("rv-og-step-10x", SAFE, "centring step 5 mm", "> self.center_step + e:", "> 10 * self.center_step + e:"),
+    ("rv-og-disp-off", SAFE, "0.5 m displacement limit",
+     "if math.hypot(x - self.center_origin[0], y - self.center_origin[1]) > self.max_disp + e:", "if False:"),
+    ("rv-og-none-tracking", SAFE, "nothing valid yet -> tracking 0",
+     "self.z_lo), self.z_hi), measured[3])\n            tracking = 0.0\n", "self.z_lo), self.z_hi), measured[3])\n"),
+    ("rv-og-meas-none-tracking", SAFE, "no measured pose yet -> tracking 0",
+     "            measured = (0.0, 0.0, 0.0, 0.0)\n            tracking = 0.0\n", "            measured = (0.0, 0.0, 0.0, 0.0)\n"),
+    ("rv-rt-nonfinite-check", RT, "runtime re-checks finiteness",
+     "if decision.packet is not None and not decision.packet.is_finite():", "if False:"),
+    ("rv-sv-maxlag-100x", SERVE, "overrun limit", "            if lag > max_lag:", "            if lag > 100 * max_lag:"),
+    ("rv-so-state-always-2", SOCK, "state 0 without a client", "return 2.0 if self.client is not None else 0.0",
+     "return 2.0"),
+    ("rv-og-arbiter-fault-off", SAFE, "arbiter tampering flagged",
+     "if (arb[0], arb[2], arb[3]) != (op[0], op[2], op[3]):", "if False:"),
+    # Added with the review fixes
+    ("og-entry-jump", SAFE, "jump on centring entry refused", '                return "centering-entry-jump"\n', ""),
+    ("og-origin-refused", SAFE, "refused entry pose is not the origin",
+     "cands = [tuple(out.desired_pose[:2])] if accepted else []", "cands = [tuple(out.desired_pose[:2])]"),
+    ("og-origin-unknown", SAFE, "no origin -> refuse", '                return "centering-origin-unknown"\n', ""),
+    ("sv-input-failstop", SERVE, "input exceptions fail-stop",
+     '            self._fail(f"input: {type(exc).__name__}: {exc}")\n', "            raise\n"),
+    ("sv-no-busy-spin", SERVE, "hybrid sleep", "sleep(-lag - spin_s if -lag > spin_s else 0)", "pass"),
 ]
 
 # Survivors argued equivalent (or boundary-only). Each is kept in the sweep so
@@ -236,12 +281,15 @@ EQUIVALENT: dict[str, str] = {
     "grid-max-step": "A step is only taken when the pixel error exceeds 20 px; with this map the smallest "
                      "resulting step is sigma_min(map) * (0.50/0.70) * 20 px = 0.023 m, so n > 0.005 and "
                      "n > 0.010 always agree and the clamp result is the same (config-dependent equivalence).",
+    "rv-takeoff-not-gated": "The FrSKY mapping already computes takeoff = 0 from rz = -1 before the issue latches, "
+                            "and the mapping is held while the issue is set, so the held takeoff is already 0.",
+    "rv-og-meas-none-tracking": "measured is None only if no finite measured pose was ever seen; that same tick "
+                                "took the non-finite branch, which already set tracking = 0.",
+    "rv-rt-nonfinite-check": "Defence in depth: every packet field is finite after the OutputGate (desired and "
+                             "measured are finite-checked, triggers are 0/1, the timestamp is sanitised).",
     "ml-max-nan": "Every call site passes the possibly-NaN value as the first operand and a finite constant "
                   "second; for a NaN first operand `a >= b` is False and the fallback already returns b, "
                   "exactly what the NaN branch does.",
-    "grid-px-tol": "Differs only when the pixel-error norm is exactly 20.0 px. The target pixel is "
-                   "centre - map\\offset (not representable), so an exact hit needs a crafted float whose result "
-                   "also depends on Octave's norm vs math.hypot rounding; a measure-zero boundary, not a behaviour.",
 }
 
 SUITES = {
@@ -251,7 +299,7 @@ SUITES = {
                 "tests/test_spec.py", "tests/test_sim.py", "tests/test_safety.py"],
     },
     "safety": {
-        "all": ["tests/test_safety.py", "tests/test_sockets.py", "tests/test_sim.py"],
+        "all": ["tests/test_safety.py", "tests/test_blocks.py", "tests/test_sockets.py", "tests/test_sim.py"],
     },
 }
 DESELECT = ["--deselect", "tests/test_spec.py::test_spec_is_fresh", "-m", "not vision and not octave"]
