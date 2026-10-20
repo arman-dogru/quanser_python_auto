@@ -144,10 +144,6 @@ class SafetyConfig:
         lo, hi = model.pose_saturation_lower, model.pose_saturation_upper
         return (lo[0], hi[0]), (lo[1], hi[1])
 
-    def max_dz(self, model: ModelConstants) -> float:
-        lo, hi = model.hold_height_limits
-        return hi - lo
-
 
 @dataclass(frozen=True)
 class Config:

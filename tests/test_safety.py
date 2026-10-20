@@ -35,6 +35,29 @@ def test_pose_guard_stale_and_garbage_objects():
         assert g.step(0.07, junk).tracking == 0.0
 
 
+def test_pose_guard_keeps_motive_tracking_flag():
+    """Motive reports a lost rigid body by continuing to stream with tracking = 0."""
+    g = PoseGuard()
+    s = g.step(0.0, OptiTrackSample((0.1, 0.2, 0.3), (0, 0, 0), 0.0))
+    assert s.tracking == 0.0 and s.position == (0.1, 0.2, 0.3)
+    assert g.step(0.01, OptiTrackSample((0.1, 0.2, 0.3), (0, 0, 0), 1.0)).tracking == 1.0
+
+
+def test_runtime_streams_tracking_zero_to_wire():
+    """A finite pose with tracking = 0, streamed at 100 Hz, must reach the
+    Commander as isTracking = 0 on every tick (not only when samples stop)."""
+    rt = MissionRuntime(DEFAULT, Mode.MONITOR)
+    for k in range(300):
+        t = k * 0.001
+        trk = 1.0 if k < 100 else 0.0
+        opti = OptiTrackSample((0.0, 0.7, 0.0), (0, 0, 0), trk) if k % 10 == 0 else None
+        rec = rt.tick(RawInputs(t, NOW + t, opti))
+        if 20 <= k < 100:
+            assert rec.decision.packet.is_tracking == 1.0, k
+        if k >= 100:
+            assert rec.decision.packet.is_tracking == 0.0, k
+
+
 # ---------------------------------------------------------------- vision
 @pytest.mark.parametrize("vec,reason", [
     ((math.nan, 1, 1, 1, 1, NOW), "non-finite"),
@@ -49,6 +72,14 @@ def test_vision_guard_refusals(vec, reason):
     g = VisionGuard()
     v, new = g.step(NOW, VISION.pack(*vec))
     assert not new and g.refused[reason] == 1 and v == (0.0, 0.0, 0.0, 0.0, -1.0, 0.0)
+
+
+@pytest.mark.parametrize("ahead,accepted", [(0.049, True), (0.051, False), (0.09, False)])
+def test_vision_guard_future_tolerance_boundary(ahead, accepted):
+    g = VisionGuard()
+    assert DEFAULT.safety.vision_future_tolerance_s == 0.05
+    _, new = g.step(NOW, VISION.pack(1, 300, 200, 0.9, 1, NOW + ahead))
+    assert new is accepted and g.refused["from-future"] == (0 if accepted else 1)
 
 
 def test_vision_guard_accepts_and_uses_newest_only():
@@ -91,6 +122,17 @@ def test_joystick_guard_stale_and_malformed():
     assert g.step(0.3, bad).x == -1.0 and g.refused["malformed"] == 1
     nan = JoystickSample(new=1.0, buttons=(0.0,) * 32, x=0, y=0, z=0, rx=0, ry=0, rz=math.nan)
     assert g.step(0.31, nan).x == -1.0 and g.refused["malformed"] == 2
+
+
+def test_joystick_guard_malformed_forgets_last_good():
+    """After a malformed sample the stale last good one must not come back."""
+    g = JoystickGuard()
+    s = JoystickSample(new=1.0, buttons=(0.0,) * 32, x=0, y=0, z=0, rx=0, ry=0, rz=1)
+    assert g.step(0.0, s) is s
+    assert g.step(0.01, JoystickSample(new=0.0, buttons=(0.0,) * 3)).rz == -1.0
+    for t in (0.02, 0.05, 0.1):
+        out = g.step(t, None)
+        assert out is not s and out.rz == -1.0 and out.x == -1.0
 
 
 # ------------------------------------------------------------ output gate
@@ -154,6 +196,69 @@ def test_centering_step_limit(outputs):
     assert "centering-step-too-large" in dec.faults
     dec = gate.step(dataclasses.replace(o, desired_pose=(0.004, -0.5, 0.5, 0.0)))
     assert "desired-height-out-of-range" in dec.faults
+
+
+def test_centering_displacement_limit(outputs):
+    """Walking in legal 5 mm steps still stops 0.5 m from the centring origin."""
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    o = dataclasses.replace(outputs, centering_active=True, desired_pose=(0.0, -0.9, 0.7, 0.0))
+    gate.step(dataclasses.replace(o, centering_active=False))
+    assert not gate.step(o).faults
+    x = 0.0
+    faults = []
+    for _ in range(150):
+        x += 0.0049
+        faults = gate.step(dataclasses.replace(o, desired_pose=(x, -0.9, 0.7, 0.0))).faults
+        if faults:
+            break
+    assert faults == ["centering-displacement-too-large"] and 0.5 < x < 0.51
+    assert gate.step(dataclasses.replace(o, desired_pose=(x, -0.9, 0.7, 0.0))).packet.desired_pose[0] < 0.5
+
+
+def test_nan_hold_corner_jump_refused_and_limit_kept(outputs):
+    """The model with a NaN hold pose commands (-1.2, -1.0, 0.7, NaN) and then
+    walks, with its own 0.5 m limit disabled (NaN origin). The gate refuses the
+    jump and the NaN yaw, and keeps the 0.5 m limit with a finite origin."""
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    hover = dataclasses.replace(outputs, desired_pose=(0.0, -0.9, 0.7, 0.0))
+    gate.step(hover)
+    c = dataclasses.replace(hover, centering_active=True)
+    dec = gate.step(dataclasses.replace(c, desired_pose=(-1.2, -1.0, 0.7, math.nan)))
+    assert "desired-non-finite" in dec.faults and dec.packet.desired_pose == (0.0, -0.9, 0.7, 0.0)
+    assert gate.center_origin == (0.0, -0.9)
+    # Same jump with a finite yaw: refused as an entry jump.
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    gate.step(hover)
+    dec = gate.step(dataclasses.replace(c, desired_pose=(-1.2, -1.0, 0.7, 0.0)))
+    assert dec.faults == ["centering-entry-jump"] and dec.packet.desired_pose == (0.0, -0.9, 0.7, 0.0)
+
+
+def test_entering_centring_from_hold_pose_is_not_a_fault(outputs):
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    gate.step(dataclasses.replace(outputs, desired_pose=(0.0, -0.9, 0.7, 0.0)))
+    dec = gate.step(dataclasses.replace(outputs, centering_active=True, desired_pose=(0.01, -0.88, 0.7, 0.0)))
+    assert not dec.faults
+
+
+def test_abort_hold_height_step_is_accepted(outputs):
+    """There is no separate height-step limit: the abort hold steps 0.70 -> 0.55 m
+    in one tick while centring (seen in the E-stop scenario); z stays bounded by
+    the [0.55, 0.70] m range check."""
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    c = dataclasses.replace(outputs, centering_active=True, desired_pose=(0.0, -0.9, 0.7, 0.0))
+    gate.step(c)
+    assert not gate.step(dataclasses.replace(c, desired_pose=(0.0, -0.9, 0.55, 0.0))).faults
+    assert "desired-height-out-of-range" in gate.step(dataclasses.replace(c, desired_pose=(0.0, -0.9, 0.5, 0.0))).faults
+
+
+def test_nothing_valid_yet_reports_no_tracking(outputs):
+    """Until one desired pose has been accepted the gate holds on the measured
+    pose and reports isTracking = 0, even with a good measured pose."""
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    dec = gate.step(dataclasses.replace(outputs, desired_pose=(math.nan, 0, 0.7, 0), is_tracking=1.0))
+    assert dec.packet.is_tracking == 0.0 and dec.packet.desired_pose == (0.0, -0.9, 0.6, 0.0)
+    dec = gate.step(outputs)
+    assert dec.packet.is_tracking == 1.0
 
 
 def test_nonfinite_measured_reports_no_tracking(outputs):

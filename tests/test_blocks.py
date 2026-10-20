@@ -123,3 +123,16 @@ def test_outputs_held_until_first_new_edge():
         s.new = 0.0                                  # no edge on "new" yet
         o = j.step(k * 0.01, s)
     assert o.triggers == (0.0, 0.0, 0.0, 0.0)
+
+
+def test_issue_needs_all_six_axes_at_minus_one():
+    """Disconnect detection looks at all six axes: five at -1 with the sixth
+    (rz, the takeoff stick) up is a connected controller, not an issue."""
+    j = Joystick()
+    t = 0.0
+    b = [0.0] * 32
+    b[1] = 1.0
+    for k in range(50):
+        o = j.step(t, JoystickSample(new=float(k % 2), buttons=tuple(b), x=-1, y=-1, z=-1, rx=-1, ry=-1, rz=1))
+        t += 0.01
+    assert o.joystick_issue == 0.0 and o.triggers == (1.0, 1.0, 0.0, 0.0)

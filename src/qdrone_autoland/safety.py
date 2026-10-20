@@ -196,7 +196,6 @@ class OutputGate:
         self.mode = mode
         self.z_lo, self.z_hi = s.z_limits(m)
         (self.x_lo, self.x_hi), (self.y_lo, self.y_hi) = s.xy_limits(m)
-        self.max_dz = s.max_dz(m)
         self.center_step = a.center_max_step
         self.max_disp = a.center_max_displacement
         self.eps = s.geofence_margin
@@ -218,15 +217,37 @@ class OutputGate:
             return "desired-outside-geofence"
         if not (self.z_lo - e <= z <= self.z_hi + e):
             return "desired-height-out-of-range"
+        if out.centering_active and not self.prev_centering and self.last_desired is not None:
+            # Entering centring: the model starts from the hover-hold pose, which is
+            # where the vehicle already is. A jump (e.g. a NaN hold pose clamped to
+            # the geofence corner by MATLAB min/max) is refused.
+            px, py, _, _ = self.last_desired
+            if math.hypot(x - px, y - py) > self.max_disp + e:
+                return "centering-entry-jump"
         if out.centering_active and self.prev_centering and self.last_desired is not None:
-            px, py, pz, _ = self.last_desired
+            # No separate height-step limit: z is already confined to [0.55, 0.70] m
+            # above, and the model's abort hold legitimately steps 0.70 -> 0.55 m.
+            px, py, _, _ = self.last_desired
             if math.hypot(x - px, y - py) > self.center_step + e:
                 return "centering-step-too-large"
-            if abs(z - pz) > self.max_dz + e:
-                return "height-step-too-large"
-            if self.center_origin is not None and math.hypot(x - self.center_origin[0],
-                                                             y - self.center_origin[1]) > self.max_disp + e:
+            if self.center_origin is None:
+                return "centering-origin-unknown"
+            if math.hypot(x - self.center_origin[0], y - self.center_origin[1]) > self.max_disp + e:
                 return "centering-displacement-too-large"
+        return None
+
+    def _origin(self, out: TickOutputs, accepted: bool) -> tuple[float, float] | None:
+        """Centring origin for the 0.5 m displacement limit: the model's first
+        centring pose when the gate accepts it (the model's own origin). When
+        it is refused (e.g. a NaN hold pose: the model commands the geofence
+        corner with a NaN yaw, and its own 0.5 m limit becomes a no-op because
+        NaN comparisons are false), the last accepted desired pose, where the
+        vehicle is holding, then the measured pose."""
+        cands = [tuple(out.desired_pose[:2])] if accepted else []
+        cands += [(self.last_desired or ())[:2], tuple(out.measured_pose[:2])]
+        for cand in cands:
+            if len(cand) == 2 and _finite(cand):
+                return float(cand[0]), float(cand[1])
         return None
 
     def step(self, out: TickOutputs) -> GateDecision:
@@ -246,11 +267,11 @@ class OutputGate:
         if (arb[0], arb[2], arb[3]) != (op[0], op[2], op[3]):
             faults.append("arbiter-altered-protected-trigger")
         # Desired pose
+        reason = self._desired_ok(out.desired_pose, out)
         if out.centering_active and not self.prev_centering:
-            self.center_origin = (float(out.desired_pose[0]), float(out.desired_pose[1]))
+            self.center_origin = self._origin(out, accepted=reason is None)
         if not out.centering_active:
             self.center_origin = None
-        reason = self._desired_ok(out.desired_pose, out)
         if reason is None:
             desired = tuple(float(v) for v in out.desired_pose)
             self.last_desired = desired
