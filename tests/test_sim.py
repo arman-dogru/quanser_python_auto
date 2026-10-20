@@ -27,6 +27,14 @@ def test_nominal_autoland_lands_on_pad():
     assert s["latched"][first_land] == 1 and s["ready"][: first_land + 1].max() == 1
 
 
+def test_model_packet_carries_arbiter_triggers():
+    s = run("nominal-autoland").signals
+    np.testing.assert_array_equal(s["model_trig2"], s["trig2"])     # AUTOLAND: wire == model
+    assert s["model_trig2"].min() == 0
+    m = run("monitor-only").signals
+    assert m["model_trig2"].min() == 0 and m["trig2"][m["op_trig2"] == 1].min() == 1
+
+
 def test_autoland_ends_with_floor_abort_bit():
     """Model behaviour worth knowing: descending below 0.45 m during LAND
     always latches descentAbort, so the abort diagnostic reports bit 8."""

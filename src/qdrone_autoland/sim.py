@@ -138,7 +138,7 @@ def project_pad(cfg: Config, pad_xy, pos, yaw) -> tuple[float, float] | None:
 
 SIGNALS = ("x", "y", "z", "dx", "dy", "dz", "stage", "abort", "ready", "fresh", "reason", "confirmed",
            "trig1", "trig2", "trig3", "trig4", "op_trig2", "latched", "vision_age", "tracking", "faults",
-           "pix_ex", "pix_ey", "abort_bits")
+           "pix_ex", "pix_ey", "abort_bits", "model_trig2")
 
 
 def run(scenario: Scenario | str, cfg: Config = DEFAULT, record_block_io: bool = False) -> SimResult:
@@ -230,6 +230,7 @@ def run(scenario: Scenario | str, cfg: Config = DEFAULT, record_block_io: bool =
         s["confirmed"][k] = float(out.confirmed_pad)
         s["trig1"][k], s["trig2"][k], s["trig3"][k], s["trig4"][k] = pkt.triggers
         s["op_trig2"][k] = out.operator_triggers[1]
+        s["model_trig2"][k] = dec.candidate.triggers[1]
         s["latched"][k] = float(out.autoland_latched)
         s["vision_age"][k] = out.vision_age
         s["tracking"][k] = pkt.is_tracking

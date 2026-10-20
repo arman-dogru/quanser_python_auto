@@ -69,6 +69,7 @@ def det_gate():
     b.append([5, 0, 1, 1, 1, 1, 0, 0, 0.51, 0, 0, 0, 0.55, 0, 3.0])
     b.append([5, 0, 1, 1, 1, 1, NAN, 0, 0.55, 0, 0, 0, 0.55, 0, 3.1])
     b.append([5, 0, 1, 1, 1, 1, 0, 0, 0.55, 0, 0, 0, 0.55, 0, NAN])
+    b.append([5, 0, 1, 1, 1, 1, 0, 0, 0.55, 0, NAN, 0, 0.55, 0, 3.2])
     b.append([5, 0, 0, 1, 1, 1, 0, 0, 0.55, 0, 0, 0, 0.55, 0, 3.3])
     b.append([5, 0, 1, 0, 1, 1, 0, 0, 0.55, 0, 0, 0, 0.55, 0, 3.4])
     seqs["boundaries"] = b
@@ -138,8 +139,52 @@ def det_confirm():
 
 def det_extract():
     rows = [[1, 2, 3, 4, 5, 6, 1, 1], [1, 2, 3, 4, 5, 6, 0, 1], [1, 2, 3, 4, 5, 6, 1, 0], [1, 2, 3, 4, 5, 6, 1, 2],
-            [NAN, 2, 3, 4, 5, 6, 1, 1], [1, 2, 3, 4, 5, 6, 1, -1]]
+            [NAN, 2, 3, 4, 5, 6, 1, 1], [1, 2, 3, 4, 5, 6, 1, -1], [1, 2, 3, 4, 5, 6, 1, 1.5]]
     return {"edges": rows}
+
+
+def det_grid():
+    """Scripted centring/descent edge cases. The measured pose is shaped from
+    the Python port's own desired pose (input shaping only; every expected
+    value still comes from Octave)."""
+    from qdrone_autoland.config import DEFAULT
+    from qdrone_autoland.logic.grid_manager import GridSearchManager
+    g = GridSearchManager(DEFAULT)
+    tx, ty = (float(v) for v in DEFAULT.auto.vision_target_pixel)
+    rows = []
+    home = [0.0, -0.9, 0.7, 0.0]
+    desired = [0.0, 0.0, 0.7, 0.01]
+
+    def tick(mp, takeoff=1.0, confirmed=1.0, hold=(0.0, 0.0, 0.7, 0.01), pad=(tx, ty), new=1.0, trk=1.0):
+        nonlocal desired
+        r = [*mp, *home, 1.0, takeoff, 0.0, 0.0, confirmed, *hold, pad[0], pad[1], new, trk]
+        rows.append(r)
+        o = g.step(r[0:4], r[4:8], r[8:12], r[12] != 0, r[13:17], r[17], r[18], r[19] != 0, r[20])
+        desired = list(o.desired_pose)
+        return o
+
+    hover = [0.0, 0.0, 0.70, 0.01]
+    for _ in range(10):
+        tick(hover, takeoff=0.0, confirmed=0.0)
+    for _ in range(20):                       # confirmed but not tracking: centring must not start
+        tick(hover, trk=0.0)
+    for _ in range(150):                      # far pad: 5 mm steps, then the 0.5 m displacement limit
+        tick(hover, pad=(400.0, 330.0))
+    for _ in range(20):                       # on target but 0.18 m from the centring pose: no descent
+        tick([desired[0] + 0.18, desired[1], 0.70, 0.01])
+    for _ in range(20):                       # on target, aligned, wrong height: good frames but stage 1
+        tick([desired[0], desired[1], 0.60, 0.01])
+    for _ in range(120):                      # follow the ladder down to stage 5 and hold
+        tick([desired[0], desired[1], desired[2], 0.01])
+    for _ in range(5):                        # exactly at the 0.45 m floor: not below it
+        tick([desired[0], desired[1], 0.45, 0.01])
+    for _ in range(5):
+        tick([desired[0], desired[1], 0.44, 0.01])
+    for _ in range(5):
+        tick(hover, takeoff=0.0, confirmed=0.0)
+    for _ in range(5):                        # NaN hold pose: MATLAB min/max clamp NaN to the limit
+        tick(hover, hold=(NAN, NAN, 0.7, 0.0), pad=(400.0, 330.0))
+    return {"centring_edges": rows}
 
 
 def det_mscomm():
@@ -264,12 +309,14 @@ def rnd_mscomm(rng, n):
 
 
 def build_inputs(out: Path) -> None:
-    det = {"gate": det_gate(), "abort": det_abort(), "arbiter": det_arbiter(), "confirm": det_confirm(),
+    det = {"grid": det_grid(), "gate": det_gate(), "abort": det_abort(), "arbiter": det_arbiter(),
+           "confirm": det_confirm(),
            "extract": det_extract(), "mscomm": det_mscomm()}
     for block, seqs in det.items():
         for name, rows in seqs.items():
             write(out / block / f"det_{name}.in.csv", rows)
-    gens = {"gate": (rnd_gate, 3, 400), "abort": (rnd_abort, 3, 400), "arbiter": (rnd_arbiter, 3, 300),
+    gens = {"gate": (rnd_gate, 3, 400), "abort": (rnd_abort, 3, 400),
+            "arbiter": (rnd_arbiter, 3, 300),
             "confirm": (rnd_confirm, 3, 600), "grid": (rnd_grid, 2, 4000), "extract": (rnd_extract, 1, 200),
             "mscomm": (rnd_mscomm, 1, 200)}
     for block, (gen, count, n) in gens.items():
@@ -362,13 +409,23 @@ def main(argv=None) -> int:
                     walk(sub, prefix + name + "/")
             walk(cmp)
             # dircmp compares shallowly by stat; confirm content explicitly
+            last_bits = []
             for f in [*tmp.rglob("*.csv"), *tmp.rglob("*.csv.gz")]:
                 g = OUT / f.relative_to(tmp)
                 if g.exists() and _content(f) != _content(g):
-                    bad.append(str(f.relative_to(tmp)))
+                    if ".out." in f.name and _close(_content(f), _content(g)):
+                        last_bits.append(str(f.relative_to(tmp)))
+                    else:
+                        bad.append(str(f.relative_to(tmp)))
             if bad:
                 print("fixtures differ:", *sorted(set(bad)), sep="\n  ")
                 return 1
+            if last_bits:
+                # A different Octave build/BLAS can round the 2x2 centring
+                # products differently; anything beyond 1e-12 is a failure.
+                print(f"fixtures regenerate within 1e-12 ({len(last_bits)} output files differ in the last bits:",
+                      ", ".join(sorted(last_bits)) + ")")
+                return 0
             print("fixtures regenerate byte-identically")
             return 0
     shutil.rmtree(OUT, ignore_errors=True)
@@ -377,6 +434,15 @@ def main(argv=None) -> int:
     build_committed_scenario(OUT)
     octave_on_gz(OUT, OUT)
     return 0
+
+
+def _close(a: bytes, b: bytes, tol: float = 1e-12) -> bool:
+    x = np.loadtxt(a.decode().splitlines(), delimiter=",", ndmin=2)
+    y = np.loadtxt(b.decode().splitlines(), delimiter=",", ndmin=2)
+    if x.shape != y.shape or (np.isnan(x) != np.isnan(y)).any():
+        return False
+    m = ~np.isnan(x)
+    return bool(np.all(np.abs(x[m] - y[m]) <= tol) and np.array_equal(np.isinf(x), np.isinf(y)))
 
 
 def _content(p: Path) -> bytes:

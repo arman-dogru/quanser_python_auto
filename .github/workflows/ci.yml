@@ -1,0 +1,80 @@
+name: ci
+
+on:
+  push:
+    branches: [main, python-port-phase10]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: lint + tests (no Octave, no YOLO)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check src tests tools
+      - name: Model spec is fresh
+        run: python tools/mdl_spec.py --check
+      - name: Tests (committed Octave fixtures; live-Octave and vision tests skip)
+        run: pytest -q -m "not vision"
+      - name: Original vision unit tests
+        run: python -m unittest discover -s python -p "test_*.py"
+
+  octave:
+    name: Octave parity (original MATLAB tests, templates, fixtures)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Octave
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends octave
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Octave version
+        run: octave-cli --version | head -1
+      - name: Live Octave tests
+        run: pytest -q -m octave -rs
+      - name: All eight SIL scenarios through Octave
+        run: |
+          python tools/make_fixtures.py --scenarios outputs/scenario_parity
+          python - <<'PY'
+          from pathlib import Path
+          from qdrone_autoland import parity
+          worst = 0.0
+          n = 0
+          for block, i, o in parity.fixture_pairs(Path("outputs/scenario_parity")):
+              x, e = parity.load_csv(i), parity.load_csv(o)
+              err = parity.compare(e, parity.run_sequence(block, x))
+              n += len(x)
+              worst = max(worst, err)
+              assert err <= 1e-12, (block, i.name, err)
+          print(f"scenario parity: {n} ticks, max abs error {worst:g}")
+          PY
+
+  vision:
+    name: interop with yolo_pad_direct_stream_fresh.py
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (CPU torch, headless OpenCV)
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install ultralytics opencv-python-headless Pillow
+          pip install -e ".[dev]"
+      - name: Vision interop tests
+        run: pytest -q -m vision -rs

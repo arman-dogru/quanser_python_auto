@@ -70,6 +70,16 @@ def test_vision_guard_resyncs_after_framing_loss():
     assert new and v[4] == 20
 
 
+def test_vision_guard_valid_record_resets_malformed_count():
+    g = VisionGuard()
+    bad = VISION.pack(math.nan, 0, 0, 0, 1, NOW)
+    for k in range(4):
+        g.step(NOW, bad)
+        g.step(NOW, bad)
+        g.step(NOW, VISION.pack(1, 300, 200, 0.9, 10 + k, NOW))
+    assert g.resyncs == 0
+
+
 # -------------------------------------------------------------- joystick
 def test_joystick_guard_stale_and_malformed():
     g = JoystickGuard()
@@ -79,8 +89,8 @@ def test_joystick_guard_stale_and_malformed():
     assert g.step(0.25, None).rz == -1.0 and g.refused["stale"] == 1
     bad = JoystickSample(new=1.0, buttons=(0.0,) * 3)
     assert g.step(0.3, bad).x == -1.0 and g.refused["malformed"] == 1
-    nan = JoystickSample(new=1.0, buttons=(math.nan,) * 32)
-    assert g.step(0.31, nan).x == -1.0
+    nan = JoystickSample(new=1.0, buttons=(0.0,) * 32, x=0, y=0, z=0, rx=0, ry=0, rz=math.nan)
+    assert g.step(0.31, nan).x == -1.0 and g.refused["malformed"] == 2
 
 
 # ------------------------------------------------------------ output gate

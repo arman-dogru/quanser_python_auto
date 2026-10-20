@@ -182,3 +182,78 @@ def test_vision_client_against_real_latest_observation_server(root):
     assert len(data) % 48 == 0 and [r[4] for r in recs] == [1, 2, 3, 4, 5]
     assert recs[1][:4] == (0.0, 0.0, 0.0, 0.0)          # not detected -> zeros, as published
     vc.close(); pub.close()
+
+
+class _ChunkySocket:
+    """Stand-in socket: returns queued chunks, then would-block."""
+
+    def __init__(self, chunks):
+        self.chunks = list(chunks)
+        self.sent = bytearray()
+        self.accept_sizes = []
+
+    def recv(self, n):
+        if not self.chunks:
+            raise BlockingIOError
+        return self.chunks.pop(0)
+
+    def send(self, data):
+        n = self.accept_sizes.pop(0) if self.accept_sizes else len(data)
+        if n == 0:
+            raise BlockingIOError
+        self.sent += data[:n]
+        return n
+
+    def close(self):
+        pass
+
+
+def test_vision_client_reads_every_chunk():
+    vc = VisionClient()
+    recs = [VISION.pack(1, k, k, 0.9, k, 0) for k in range(5)]
+    vc.sock = _ChunkySocket(recs)
+    assert vc.read(0.0) == b"".join(recs)
+
+
+def test_commander_partial_write_completed_before_next_packet():
+    srv = CommanderServer("127.0.0.1", 0)
+    fake = _ChunkySocket([])
+    srv.client = fake
+    fake.accept_sizes = [50, 62, 112]
+    assert srv.send(COMMAND.pack(*([1.0] * 14)))      # 50 bytes out, 62 pending
+    assert srv.send(COMMAND.pack(*([2.0] * 14)))      # pending tail first, then the new packet
+    assert bytes(fake.sent) == COMMAND.pack(*([1.0] * 14)) + COMMAND.pack(*([2.0] * 14))
+    fake.accept_sizes = [0]
+    assert not srv.send(COMMAND.pack(*([3.0] * 14))) and srv.dropped == 1
+    # A tail that itself only partly drains must stay pending (never be dropped).
+    fake.sent.clear()
+    fake.accept_sizes = [50, 30, 32, 112]
+    p4, p5, p6 = (COMMAND.pack(*([v] * 14)) for v in (4.0, 5.0, 6.0))
+    assert srv.send(p4)
+    assert not srv.send(p5)                           # 30 of 62 tail bytes out; p5 dropped
+    assert srv.send(p6)                               # remaining 32 tail bytes, then p6
+    assert bytes(fake.sent) == p4 + p6
+    srv.client = None
+    srv.close()
+
+
+def test_serve_reconnects_vision_after_framing_loss():
+    pub, fake, srv = _server(Mode.MONITOR)
+    assert fake.connected.wait(3)
+    closes = []
+    real_close = srv.vision.close
+    srv.vision.close = lambda: (closes.append(1), real_close())[1]
+    srv.run(duration=0.05)
+    assert _wait(lambda: pub.publish(1, 300.0, 200.0, 0.9, 1, time.time()))
+    srv.run(duration=0.1)
+    pub.send_raw(b"\x00\x01\x02")
+    for k in range(3):
+        pub.publish(1, 300.0, 200.0, 0.9, 2 + k, time.time())
+        srv.run(duration=0.15 + 0.05 * k)
+    assert srv.runtime.vision_guard.resyncs == 1 and closes == [1]     # reconnect requested
+    before = srv.runtime.vision_guard.accepted
+    for k in range(20):
+        pub.publish(1, 300.0, 200.0, 0.9, 10 + k, time.time())
+        srv.run(duration=0.35 + 0.02 * k)
+    assert srv.runtime.vision_guard.accepted > before        # fresh connection, framing restored
+    fake.stop(); srv.close(); pub.close()

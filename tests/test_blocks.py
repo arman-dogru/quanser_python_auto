@@ -92,3 +92,34 @@ def test_mission_comm_issue_shown_only_after_first_recovery():
     first = [i for i, (iss, _) in enumerate(shown_seen) if iss][0]
     assert shown_seen[first][1] == 0                             # first loss: not displayed
     assert any(s for _, s in shown_seen[2200:2600])              # second loss: displayed
+
+
+def test_takeoff_axis_threshold_is_minus_half():
+    j = Joystick()
+    for k in range(5):
+        o = j.step(k * 0.01, _joy(k * 0.01, rz=-0.5 if k < 3 else -0.51))
+        assert o.triggers[1] == (1.0 if k < 3 else 0.0) or k == 0
+
+
+def test_issue_zeroes_held_arm():
+    """A controller that reports all axes at -1 while arm is still pressed:
+    once the issue latches, the held FrSKY arm output must be masked."""
+    j = Joystick()
+    t = 0.0
+    for _ in range(10):
+        j.step(t, _joy(t)); t += 0.01
+    b = [0.0] * 32
+    b[1] = 1.0
+    for k in range(30):
+        o = j.step(t, JoystickSample(new=float(k % 2), buttons=tuple(b)))
+        t += 0.01
+    assert o.joystick_issue == 1.0 and o.triggers[:2] == (0.0, 0.0)
+
+
+def test_outputs_held_until_first_new_edge():
+    j = Joystick()
+    for k in range(30):
+        s = _joy(k * 0.01)
+        s.new = 0.0                                  # no edge on "new" yet
+        o = j.step(k * 0.01, s)
+    assert o.triggers == (0.0, 0.0, 0.0, 0.0)

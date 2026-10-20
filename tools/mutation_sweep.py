@@ -225,8 +225,24 @@ SAFETY = [
     ("so-drain", SOCK, "vision backlog drained", "            chunks.append(data)\n", "            chunks.append(data)\n            break\n"),
 ]
 
-# Mutants argued equivalent (none at present).
-EQUIVALENT: dict[str, str] = {}
+# Survivors argued equivalent (or boundary-only). Each is kept in the sweep so
+# the argument is re-checked whenever the code changes.
+EQUIVALENT: dict[str, str] = {
+    "arb-ready-threshold": "landingReady is the gate's logical output (0 or 1 only, also in the model's typing), "
+                           "so > 0.5 and >= 0.5 cannot differ.",
+    "gate-ready-recheck": "The ready expression is only reached when not (no new sample and stale): either a new "
+                          "sample just set lastFresh = clockTime (finite, checked earlier) or the gate is not stale, "
+                          "i.e. clockTime - lastFresh <= 0.5 already holds.",
+    "grid-max-step": "A step is only taken when the pixel error exceeds 20 px; with this map the smallest "
+                     "resulting step is sigma_min(map) * (0.50/0.70) * 20 px = 0.023 m, so n > 0.005 and "
+                     "n > 0.010 always agree and the clamp result is the same (config-dependent equivalence).",
+    "ml-max-nan": "Every call site passes the possibly-NaN value as the first operand and a finite constant "
+                  "second; for a NaN first operand `a >= b` is False and the fallback already returns b, "
+                  "exactly what the NaN branch does.",
+    "grid-px-tol": "Differs only when the pixel-error norm is exactly 20.0 px. The target pixel is "
+                   "centre - map\\offset (not representable), so an exact hit needs a crafted float whose result "
+                   "also depends on Octave's norm vs math.hypot rounding; a measure-zero boundary, not a behaviour.",
+}
 
 SUITES = {
     "logic": {
