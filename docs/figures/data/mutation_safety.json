@@ -1,9 +1,9 @@
 {
  "sweep": "safety",
- "mutants": 66,
+ "mutants": 75,
  "summary": {
   "all": {
-   "killed": 63,
+   "killed": 72,
    "killed-error": 0,
    "timeout": 0,
    "survived": 3
@@ -19,7 +19,7 @@
   "rv-og-meas-none-tracking": "measured is None only if no finite measured pose was ever seen; that same tick took the non-finite branch, which already set tracking = 0.",
   "rv-rt-nonfinite-check": "Defence in depth: every packet field is finite after the OutputGate (desired and measured are finite-checked, triggers are 0/1, the timestamp is sanitised)."
  },
- "seconds": 58.5,
+ "seconds": 52.0,
  "results": [
   {
    "id": "pg-nan",
@@ -390,7 +390,7 @@
   {
    "id": "og-entry-jump",
    "file": "safety.py",
-   "rule": "jump on centring entry refused",
+   "rule": "jump on centring entry / re-anchor refused",
    "all": "killed"
   },
   {
@@ -403,6 +403,60 @@
    "id": "og-late-origin",
    "file": "safety.py",
    "rule": "first accepted centring pose becomes the origin",
+   "all": "killed"
+  },
+  {
+   "id": "og-anchor-sent",
+   "file": "safety.py",
+   "rule": "centring entry anchored on the measured pose, not the last sent one",
+   "all": "killed"
+  },
+  {
+   "id": "og-anchor-untracked",
+   "file": "safety.py",
+   "rule": "measured pose used only while tracking",
+   "all": "killed"
+  },
+  {
+   "id": "og-no-reanchor",
+   "file": "safety.py",
+   "rule": "re-anchor on the measured pose after a refusal",
+   "all": "killed"
+  },
+  {
+   "id": "og-no-escalation",
+   "file": "safety.py",
+   "rule": "persistent centring refusals escalate",
+   "all": "killed"
+  },
+  {
+   "id": "og-escalation-reset",
+   "file": "safety.py",
+   "rule": "accepted pose resets the refusal timer",
+   "all": "killed"
+  },
+  {
+   "id": "og-fault-latch",
+   "file": "safety.py",
+   "rule": "centring fault latched until centring ends",
+   "all": "killed"
+  },
+  {
+   "id": "og-fault-no-land",
+   "file": "safety.py",
+   "rule": "no autonomous LAND after a centring fault",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-stale",
+   "file": "safety.py",
+   "rule": "refusal holds where the vehicle is",
+   "all": "killed"
+  },
+  {
+   "id": "sv-gate-status-hidden",
+   "file": "io/serve.py",
+   "rule": "gate status exposed in ServeStats",
    "all": "killed"
   },
   {
