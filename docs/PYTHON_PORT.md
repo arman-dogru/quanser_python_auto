@@ -39,7 +39,7 @@ flowchart LR
 | Logic mutation sweep | 62 of 66 killed (45 by the Octave fixtures alone). The 4 survivors are argued equivalent in `tools/mutation_sweep.py` | [mutation_logic.json](figures/data/mutation_logic.json) |
 | Phase 10 autonomous LAND | ported faithfully, **off by default** (`--mode monitor`) | arbiter parity + scenarios |
 | Sockets: mission server <-> Commander, <- publisher | done, loopback-tested | `tests/test_sockets.py`, `qautoland loopback` |
-| Real-time loop | 1 kHz model time, hybrid sleep: about 10-20 % of one core on Linux, tick lag p50 35 µs, p99 50 µs (5 s dry runs). Windows CI runner (run 39493996791): 15 % of one core (0.75 s CPU in 5.0 s), tick lag p50 0.07 ms, p99 0.32 ms | `tests/test_sockets.py`; the Windows CI job runs a 5 s dry run and fails if tick lag p99 reaches 5 ms |
+| Real-time loop | 1 kHz model time, hybrid sleep: about 10-20 % of one core on Linux, tick lag p50 35 µs, p99 50 µs (5 s dry runs). Windows CI runner, two runs: 15 % and 36 % of one core (0.75 s and 1.81 s CPU in 5.0 s), tick lag p99 0.32 ms and 0.34 ms (runs 39493996791 and 39500677539) | `tests/test_sockets.py`; the Windows CI job runs a 5 s dry run and fails if tick lag p99 reaches 5 ms |
 | OptiTrack NatNet client, game-controller reader | **not implemented** (interfaces only, `io/sources.py`) | |
 | Flight / QUARC / Simulink | **not run** | |
 
