@@ -27,7 +27,38 @@ def test_model_charts_equal_templates(root):
     assert "FAIL" not in out
 
 
+def _octave_version() -> str:
+    r = subprocess.run(["octave-cli", "--version"], capture_output=True, text=True)
+    return r.stdout.split("\n")[0].split()[-1]
+
+
+def test_python_matches_this_octave(root, tmp_path):
+    """The oracle property itself, on whatever Octave is installed: regenerate
+    every committed fixture's outputs with it and compare the Python port."""
+    import numpy as np
+    from test_parity import DISCRETE, _load
+
+    from qdrone_autoland import parity
+    out = tmp_path / "fx"
+    r = subprocess.run([sys.executable, str(root / "tools" / "make_fixtures.py"), "--out", str(out)], cwd=root,
+                       capture_output=True, text=True, timeout=900)
+    assert r.returncode == 0, r.stdout + r.stderr
+    n = 0
+    for inp in sorted([*out.glob("*/*.in.csv"), *out.glob("*/*.in.csv.gz")]):
+        block = inp.parent.name
+        x, e = _load(inp), _load(inp.with_name(inp.name.replace(".in.", ".out.")))
+        a = parity.run_sequence(block, x)
+        np.testing.assert_array_equal(a[:, DISCRETE[block]], e[:, DISCRETE[block]], err_msg=f"{block}/{inp.name}")
+        assert parity.compare(e, a) <= 1e-12, f"{block}/{inp.name}"
+        n += len(x)
+    assert n > 40000
+
+
 def test_fixtures_regenerate_byte_identically(root):
+    """Committed outputs were produced with Octave 9.4; another Octave/BLAS
+    build may round the centring products differently, which can cascade."""
+    if not _octave_version().startswith("9."):
+        pytest.skip(f"fixtures were generated with Octave 9.4, this is {_octave_version()}")
     r = subprocess.run([sys.executable, str(root / "tools" / "make_fixtures.py"), "--check"], cwd=root,
                        capture_output=True, text=True, timeout=900)
     assert r.returncode == 0, r.stdout + r.stderr

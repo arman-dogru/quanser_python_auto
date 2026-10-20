@@ -384,12 +384,23 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--scenarios", type=Path, help="write SIL scenario fixtures to this directory")
+    ap.add_argument("--out", type=Path, help="regenerate the committed set into this directory instead")
     args = ap.parse_args(argv)
     sys.path.insert(0, str(ROOT / "src"))
     if args.scenarios:
         shutil.rmtree(args.scenarios, ignore_errors=True)
         build_scenarios(args.scenarios)
         run_octave(args.scenarios)
+        return 0
+    if args.out:
+        shutil.rmtree(args.out, ignore_errors=True)
+        build_inputs(args.out)
+        run_octave(args.out)
+        for gz in OUT.rglob("*.in.csv.gz"):          # same committed closed-loop inputs
+            dst = args.out / gz.relative_to(OUT)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_bytes(gz.read_bytes())
+        octave_on_gz(OUT, args.out)
         return 0
     if args.check:
         with tempfile.TemporaryDirectory() as tmp:
@@ -419,6 +430,17 @@ def main(argv=None) -> int:
                         bad.append(str(f.relative_to(tmp)))
             if bad:
                 print("fixtures differ:", *sorted(set(bad)), sep="\n  ")
+                for name in sorted(set(bad)):
+                    f, g = tmp / name, OUT / name
+                    if f.exists() and g.exists() and ".out." in name:
+                        x = np.loadtxt(_content(f).decode().splitlines(), delimiter=",", ndmin=2)
+                        y = np.loadtxt(_content(g).decode().splitlines(), delimiter=",", ndmin=2)
+                        if x.shape == y.shape:
+                            d = np.abs(np.nan_to_num(x, nan=0.0, posinf=0.0, neginf=0.0)
+                                       - np.nan_to_num(y, nan=0.0, posinf=0.0, neginf=0.0))
+                            r, c = np.unravel_index(int(np.argmax(d)), d.shape)
+                            print(f"  {name}: max diff {d.max():g} at row {r} col {c}; "
+                                  f"{int((d > 1e-12).any(axis=1).sum())} rows > 1e-12")
                 return 1
             if last_bits:
                 # A different Octave build/BLAS can round the 2x2 centring

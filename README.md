@@ -25,12 +25,14 @@ flowchart LR
 | Part | State | Evidence |
 |---|---|---|
 | Model reading | done: both `.mdl` files parsed directly by `tools/mdl_spec.py` into `docs/spec/` | `mdl_spec.py --check` in CI |
-| Mission logic: 7 MATLAB Function blocks | ported, explicit state + `reset()` | Octave runs the chart code taken from the model. 0 abs error on 29 of 30 committed sequences; max 1.1e-16 on grid centring. 1.8 M ticks over 8 closed-loop scenarios, 0 error |
+| Mission logic: 7 MATLAB Function blocks | ported, explicit state + `reset()` | Octave runs the chart code taken from the model. 30 committed sequences (188 k ticks): 27 exact, 3 grid sequences differ by at most 1.1e-16. All 8 closed-loop scenarios (1.81 M ticks) are exact |
 | Block chains (convention correction, conditioning, home pose, joystick, comm loss) | ported from the block parameters | unit tests; not checkable against Simulink here |
 | Original MATLAB tests | `test_phase9_landing_gate`, `test_phase9_abort_diagnostics` pass **unmodified** in Octave 9.4. The phase 10 dry run's behavioural half is re-run in Octave and its structural half is checked on the parsed model | `tools/octave/run_original_tests.m`, `tests/test_spec.py` |
 | Model code vs `matlab/phase*.txt` templates | identical once `config_autonomous()` is substituted | `tools/octave/check_templates.m` |
-| Wire formats (`<6d`, `<14d`, `<d`, column-major frames) | done | protocol tests; interop with the real publisher over TCP |
-| Safety layer (guards, output gate, fail-stop) | done, on the only runtime path | `docs/SAFETY.md`, fuzz and scenario tests, safety mutation sweep |
+| Wire formats (`<6d`, `<14d`, `<d`, column-major frames) | done | protocol tests; `yolo_pad_direct_stream_fresh.py` runs unmodified as a subprocess, fed synthetic frames over TCP 18910 |
+| Tests | 131 pytest tests (Octave and vision ones skip without their tools) + the original `python/test_camera_freshness.py` | CI: lint+tests, Octave, vision |
+| Safety layer (guards, output gate, fail-stop) | done, on the only runtime path | `docs/SAFETY.md`, fuzz and scenario tests; safety mutation sweep killed 40 of 40 |
+| Logic mutation sweep | 61 of 66 killed (44 by the Octave fixtures alone). The 5 survivors are argued equivalent or boundary-only in `tools/mutation_sweep.py` | `docs/figures/data/mutation_logic.json` |
 | Phase 10 autonomous LAND | ported faithfully, **off by default** (`--mode monitor`) | arbiter parity + scenarios |
 | Sockets: mission server <-> Commander, <- publisher | done, loopback-tested | `tests/test_sockets.py`, `qautoland loopback` |
 | OptiTrack NatNet client, game-controller reader | **not implemented** (interfaces only). `serve` is inert without them | |

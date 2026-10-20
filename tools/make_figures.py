@@ -139,10 +139,12 @@ def safety_figure(results) -> dict:
         summary[name] = {"events": r.events, "abort_bits": bits, "gate_faults": int(s["faults"].sum()),
                          "vision_refused": dict(r.runtime.vision_guard.refused),
                          "pose_refused": dict(r.runtime.pose_guard.refused)}
+    for ax in list(axes.flat)[len(names):]:
+        ax.set_visible(False)
     axes[0, 0].set_ylabel("z (m) / bits")
     axes[1, 0].set_ylabel("z (m) / bits")
     axes[0, 0].set_yticks([0, 0.5, 0.94, 1.09, 1.24], ["0", "0.5", "trig2", "E-stop", "joy issue"])
-    for ax in axes[1]:
+    for ax in axes[1][: len(names) - 4]:
         ax.set_xlabel("time (s)")
     fig.tight_layout()
     fig.savefig(FIG / "safety_scenarios.png")

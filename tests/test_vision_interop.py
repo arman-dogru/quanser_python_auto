@@ -69,6 +69,7 @@ def test_fresh_publisher_end_to_end(root, tmp_path):
          "--project-root", str(tmp_path), "--listen-address", "127.0.0.1",
          "--camera-port", str(cam_port), "--detection-port", str(det_port)],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
+    out = ""
     try:
         cam = None
         end = time.monotonic() + 120
@@ -113,13 +114,19 @@ def test_fresh_publisher_end_to_end(root, tmp_path):
         n_after_freeze = len(recs)
         cam.close()
         vc.close()
-    finally:
+    except Exception as exc:
         proc.terminate()
+        raise AssertionError(f"publisher output:\n{proc.communicate(timeout=10)[0]}") from exc
+    finally:
+        if proc.poll() is None:
+            proc.terminate()
         try:
             out = proc.communicate(timeout=10)[0]
         except subprocess.TimeoutExpired:
             proc.kill()
             out = proc.communicate()[0]
+        except ValueError:                    # already drained by the error path above
+            pass
     # The first frame is consumed while the Mission Server connection is accepted (accept-on-publish).
     assert n_distinct >= 6, out
     assert n_after_freeze - n_distinct == 1, out           # first frozen frame is new; repeats withheld
