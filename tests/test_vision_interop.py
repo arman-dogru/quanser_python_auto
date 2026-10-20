@@ -85,32 +85,39 @@ def test_fresh_publisher_end_to_end(root, tmp_path):
         recs: list[tuple] = []
         accepted: list[tuple] = []
 
-        def pump(seconds):
+        buf = bytearray()
+
+        def pump(seconds, until=None):
             stop = time.monotonic() + seconds
-            buf = bytearray()
             while time.monotonic() < stop:
                 data = vc.read(time.time())
-                buf += data
                 if data:
+                    buf.extend(data)
                     v, new = guard.step(time.time(), data)
                     if new:
                         accepted.append(v)
+                    del recs[:]
+                    recs.extend(VISION.unpack(bytes(buf[i:i + 48])) for i in range(0, len(buf) - len(buf) % 48, 48))
+                    if until is not None and len(recs) >= until:
+                        return
                 time.sleep(0.005)
-            recs.extend(VISION.unpack(bytes(buf[i:i + 48])) for i in range(0, len(buf) - len(buf) % 48, 48))
 
         rng = np.random.default_rng(1)
         vc.read(time.time())
-        # Distinct frames at the model's 5 Hz -> one observation each (non-detections always pass).
-        for _ in range(8):
+        # Distinct frames -> one observation each (non-detections always pass). Wait for each one:
+        # the first YOLO inference (warm-up) can take many seconds on a CI runner.
+        for k in range(8):
             cam.sendall(protocol.encode_frame(rng.integers(0, 255, (480, 640), dtype=np.uint8)))
-            pump(0.2)
+            pump(60 if k == 0 else 20, until=k + 1)
         n_distinct = len(recs)
-        # The camera "freezes": identical frames must be withheld by the publisher.
+        # The camera "freezes": the first frozen image is new, its repeats must be withheld.
         frozen = protocol.encode_frame(rng.integers(0, 255, (480, 640), dtype=np.uint8))
-        for _ in range(6):
+        cam.sendall(frozen)
+        pump(20, until=n_distinct + 1)
+        for _ in range(5):
             cam.sendall(frozen)
             pump(0.2)
-        pump(1.0)
+        pump(3.0)
         n_after_freeze = len(recs)
         cam.close()
         vc.close()
@@ -127,11 +134,11 @@ def test_fresh_publisher_end_to_end(root, tmp_path):
             out = proc.communicate()[0]
         except ValueError:                    # already drained by the error path above
             pass
-    # The first frame is consumed while the Mission Server connection is accepted (accept-on-publish).
-    assert n_distinct >= 6, out
+    assert n_distinct == 8, out
     assert n_after_freeze - n_distinct == 1, out           # first frozen frame is new; repeats withheld
     frames = [r[4] for r in recs]
     assert frames == sorted(frames) and len(set(frames)) == len(frames)
     assert all(abs(time.time() - r[5]) < 120 for r in recs)
     assert all(r[0] in (0.0, 1.0) for r in recs)
-    assert len(accepted) == len(recs) and "CAMERA STALE" in out
+    assert len(accepted) + guard.buffer.dropped == len(recs) and not guard.refused   # all fresh, all well-formed
+    assert "CAMERA STALE" in out
