@@ -1,9 +1,9 @@
 {
  "sweep": "safety",
- "mutants": 75,
+ "mutants": 93,
  "summary": {
   "all": {
-   "killed": 72,
+   "killed": 90,
    "killed-error": 0,
    "timeout": 0,
    "survived": 3
@@ -19,7 +19,7 @@
   "rv-og-meas-none-tracking": "measured is None only if no finite measured pose was ever seen; that same tick took the non-finite branch, which already set tracking = 0.",
   "rv-rt-nonfinite-check": "Defence in depth: every packet field is finite after the OutputGate (desired and measured are finite-checked, triggers are 0/1, the timestamp is sanitised)."
  },
- "seconds": 52.0,
+ "seconds": 57.0,
  "results": [
   {
    "id": "pg-nan",
@@ -390,7 +390,7 @@
   {
    "id": "og-entry-jump",
    "file": "safety.py",
-   "rule": "jump on centring entry / re-anchor refused",
+   "rule": "jump on centring entry refused",
    "all": "killed"
   },
   {
@@ -418,9 +418,9 @@
    "all": "killed"
   },
   {
-   "id": "og-no-reanchor",
+   "id": "og-step-reanchor",
    "file": "safety.py",
-   "rule": "re-anchor on the measured pose after a refusal",
+   "rule": "step limit not bypassed by re-anchoring after a refusal",
    "all": "killed"
   },
   {
@@ -436,21 +436,129 @@
    "all": "killed"
   },
   {
+   "id": "og-escalate-10x",
+   "file": "safety.py",
+   "rule": "escalation after 2 s",
+   "all": "killed"
+  },
+  {
    "id": "og-fault-latch",
    "file": "safety.py",
    "rule": "centring fault latched until centring ends",
    "all": "killed"
   },
   {
-   "id": "og-fault-no-land",
+   "id": "og-fault-never-clears",
    "file": "safety.py",
-   "rule": "no autonomous LAND after a centring fault",
+   "rule": "centring fault cleared when centring ends",
+   "all": "killed"
+  },
+  {
+   "id": "og-refused-status-not-reset",
+   "file": "safety.py",
+   "rule": "accepted pose returns the status to ok",
+   "all": "killed"
+  },
+  {
+   "id": "og-refusal-count",
+   "file": "safety.py",
+   "rule": "refused centring ticks counted",
+   "all": "killed"
+  },
+  {
+   "id": "og-land-interrupted",
+   "file": "safety.py",
+   "rule": "a LAND already applied is never interrupted (trigger 2 stays lowered)",
+   "all": "killed"
+  },
+  {
+   "id": "og-new-land-while-refused",
+   "file": "safety.py",
+   "rule": "no new autonomous LAND unless the gate status is ok",
+   "all": "killed"
+  },
+  {
+   "id": "og-land-active-latch",
+   "file": "safety.py",
+   "rule": "LAND state follows the arbiter",
    "all": "killed"
   },
   {
    "id": "og-hold-stale",
    "file": "safety.py",
-   "rule": "refusal holds where the vehicle is",
+   "rule": "refusal holds the validated hold, not the last accepted pose",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-recapture",
+   "file": "safety.py",
+   "rule": "entry hold captured once",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-kept-across-phases",
+   "file": "safety.py",
+   "rule": "entry hold cleared when centring ends",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-z-measured",
+   "file": "safety.py",
+   "rule": "hold keeps the last accepted height",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-teleport",
+   "file": "safety.py",
+   "rule": "measured xy further than 0.1 m from the previous sample is not trusted",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-outside-area",
+   "file": "safety.py",
+   "rule": "measured xy outside the flight area is not trusted",
+   "all": "killed"
+  },
+  {
+   "id": "og-vehicle-no-fallback",
+   "file": "safety.py",
+   "rule": "vehicle position falls back to the last accepted pose",
+   "all": "killed"
+  },
+  {
+   "id": "og-entry-tol-4x",
+   "file": "safety.py",
+   "rule": "entry jump limit 0.5 m",
+   "all": "killed"
+  },
+  {
+   "id": "og-origin-untracked",
+   "file": "safety.py",
+   "rule": "centring origin never from an untracked pose",
+   "all": "killed"
+  },
+  {
+   "id": "og-disp-after-refusal",
+   "file": "safety.py",
+   "rule": "displacement limit also on the tick after a refusal",
+   "all": "killed"
+  },
+  {
+   "id": "og-disp-during-entry",
+   "file": "safety.py",
+   "rule": "displacement limit also while the entry is refused",
+   "all": "killed"
+  },
+  {
+   "id": "og-disp-off",
+   "file": "safety.py",
+   "rule": "displacement limit",
+   "all": "killed"
+  },
+  {
+   "id": "sv-refusals-stale",
+   "file": "io/serve.py",
+   "rule": "refusal counter copied to ServeStats",
    "all": "killed"
   },
   {
