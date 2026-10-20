@@ -230,9 +230,8 @@ class OutputGate:
             px, py, _, _ = self.last_desired
             if math.hypot(x - px, y - py) > self.center_step + e:
                 return "centering-step-too-large"
-            if self.center_origin is None:
-                return "centering-origin-unknown"
-            if math.hypot(x - self.center_origin[0], y - self.center_origin[1]) > self.max_disp + e:
+            if self.center_origin is not None and math.hypot(x - self.center_origin[0],
+                                                             y - self.center_origin[1]) > self.max_disp + e:
                 return "centering-displacement-too-large"
         return None
 
@@ -272,6 +271,10 @@ class OutputGate:
             self.center_origin = self._origin(out, accepted=reason is None)
         if not out.centering_active:
             self.center_origin = None
+        elif self.center_origin is None and reason is None:
+            # No finite origin at entry (nothing accepted yet, measured non-finite):
+            # the first accepted centring pose becomes the origin.
+            self.center_origin = (float(out.desired_pose[0]), float(out.desired_pose[1]))
         if reason is None:
             desired = tuple(float(v) for v in out.desired_pose)
             self.last_desired = desired

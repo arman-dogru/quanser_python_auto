@@ -233,6 +233,24 @@ def test_nan_hold_corner_jump_refused_and_limit_kept(outputs):
     assert dec.faults == ["centering-entry-jump"] and dec.packet.desired_pose == (0.0, -0.9, 0.7, 0.0)
 
 
+def test_centring_origin_when_entry_has_nothing_finite(outputs):
+    """Entry with a refused pose, nothing accepted before and a non-finite
+    measured pose: the first accepted centring pose becomes the origin, so
+    the 0.5 m limit still holds."""
+    gate = OutputGate(DEFAULT, Mode.MONITOR)
+    c = dataclasses.replace(outputs, centering_active=True, measured_pose=(math.nan, 0, 0.6, 0))
+    gate.step(dataclasses.replace(c, desired_pose=(math.nan, -0.9, 0.7, 0.0)))
+    assert gate.center_origin is None
+    c = dataclasses.replace(c, measured_pose=(0.0, -0.9, 0.6, 0.0))
+    assert not gate.step(dataclasses.replace(c, desired_pose=(0.0, -0.9, 0.7, 0.0))).faults
+    assert gate.center_origin == (0.0, -0.9)
+    x, faults = 0.0, []
+    while not faults and x < 1.0:
+        x += 0.0049
+        faults = gate.step(dataclasses.replace(c, desired_pose=(x, -0.9, 0.7, 0.0))).faults
+    assert faults == ["centering-displacement-too-large"] and x < 0.51
+
+
 def test_entering_centring_from_hold_pose_is_not_a_fault(outputs):
     gate = OutputGate(DEFAULT, Mode.MONITOR)
     gate.step(dataclasses.replace(outputs, desired_pose=(0.0, -0.9, 0.7, 0.0)))

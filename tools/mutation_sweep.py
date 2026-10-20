@@ -248,7 +248,7 @@ SAFETY = [
      "if frame < 0:"),
     ("rv-og-step-10x", SAFE, "centring step 5 mm", "> self.center_step + e:", "> 10 * self.center_step + e:"),
     ("rv-og-disp-off", SAFE, "0.5 m displacement limit",
-     "if math.hypot(x - self.center_origin[0], y - self.center_origin[1]) > self.max_disp + e:", "if False:"),
+     "y - self.center_origin[1]) > self.max_disp + e:", "y - self.center_origin[1]) > 1e9:"),
     ("rv-og-none-tracking", SAFE, "nothing valid yet -> tracking 0",
      "self.z_lo), self.z_hi), measured[3])\n            tracking = 0.0\n", "self.z_lo), self.z_hi), measured[3])\n"),
     ("rv-og-meas-none-tracking", SAFE, "no measured pose yet -> tracking 0",
@@ -261,10 +261,12 @@ SAFETY = [
     ("rv-og-arbiter-fault-off", SAFE, "arbiter tampering flagged",
      "if (arb[0], arb[2], arb[3]) != (op[0], op[2], op[3]):", "if False:"),
     # Added with the review fixes
-    ("og-entry-jump", SAFE, "jump on centring entry refused", '                return "centering-entry-jump"\n', ""),
+    ("og-entry-jump", SAFE, "jump on centring entry refused", '                return "centering-entry-jump"\n',
+     "                pass\n"),
     ("og-origin-refused", SAFE, "refused entry pose is not the origin",
      "cands = [tuple(out.desired_pose[:2])] if accepted else []", "cands = [tuple(out.desired_pose[:2])]"),
-    ("og-origin-unknown", SAFE, "no origin -> refuse", '                return "centering-origin-unknown"\n', ""),
+    ("og-late-origin", SAFE, "first accepted centring pose becomes the origin",
+     "        elif self.center_origin is None and reason is None:", "        elif False:"),
     ("sv-input-failstop", SERVE, "input exceptions fail-stop",
      '            self._fail(f"input: {type(exc).__name__}: {exc}")\n', "            raise\n"),
     ("sv-no-busy-spin", SERVE, "hybrid sleep", "sleep(-lag - spin_s if -lag > spin_s else 0)", "pass"),
@@ -273,13 +275,14 @@ SAFETY = [
 # Survivors argued equivalent (or boundary-only). Each is kept in the sweep so
 # the argument is re-checked whenever the code changes.
 EQUIVALENT: dict[str, str] = {
-    "arb-ready-threshold": "landingReady is the gate's logical output (0 or 1 only, also in the model's typing), "
-                           "so > 0.5 and >= 0.5 cannot differ.",
+    "arb-ready-threshold": "Equivalent in composition: landingReady is the gate's logical output and the core passes "
+                           "1.0/0.0, so > 0.5 and >= 0.5 cannot differ. Only a unit-level input of exactly 0.5 "
+                           "would tell them apart.",
     "gate-ready-recheck": "The ready expression is only reached when not (no new sample and stale): either a new "
                           "sample just set lastFresh = clockTime (finite, checked earlier) or the gate is not stale, "
                           "i.e. clockTime - lastFresh <= 0.5 already holds.",
     "grid-max-step": "A step is only taken when the pixel error exceeds 20 px; with this map the smallest "
-                     "resulting step is sigma_min(map) * (0.50/0.70) * 20 px = 0.023 m, so n > 0.005 and "
+                     "resulting step is sigma_min(map) * (0.50/0.70) * 20 px = 0.0227 m (sigma_min = 0.0015883), so n > 0.005 and "
                      "n > 0.010 always agree and the clamp result is the same (config-dependent equivalence).",
     "rv-takeoff-not-gated": "The FrSKY mapping already computes takeoff = 0 from rz = -1 before the issue latches, "
                             "and the mapping is held while the issue is set, so the held takeoff is already 0.",
