@@ -14,3 +14,8 @@ data/
 saved_data/
 runs/
 *.mp4
+# Python port
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+outputs/

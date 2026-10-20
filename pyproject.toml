@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qdrone-autoland"
+version = "0.1.0"
+description = "Python port of the QDrone Phase 10 autonomous-landing mission server (MATLAB/Simulink/QUARC)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+vision = ["ultralytics", "opencv-python", "Pillow"]
+plots = ["matplotlib>=3.7"]
+dev = ["pytest>=7", "ruff>=0.5", "matplotlib>=3.7"]
+
+[project.scripts]
+qautoland = "qdrone_autoland.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "octave: needs octave-cli on PATH (runs the extracted MATLAB code live)",
+    "vision: runs python/yolo_pad_direct_stream_fresh.py, needs ultralytics + opencv",
+    "slow: closed-loop scenarios",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+# The original project sources are reference material and stay byte-identical.
+extend-exclude = ["python", "matlab", "simulink", "working_grid_search_2026-08-13", "docs/spec"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
