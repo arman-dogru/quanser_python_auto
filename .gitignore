@@ -1,14 +1,15 @@
+# Python
 __pycache__/
 *.py[cod]
+*.egg-info/
 .venv/
-.env
-.env.*
-!.env.example
 .pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# Generated outputs (plots, replay results, detections, YOLO runs)
+outputs/
 runs/
-saved_data/
-data/
-slprj/
-*_quarc_*/
-*.slxc
-*.asv
+docs/plots/
+*.jsonl.out

@@ -1,0 +1,492 @@
+{
+ "model": "reference/simulink/QDrone_YOLO_Pose_Command_Test.slx",
+ "sha256": "2daa1cd1295289e67f923b90305fe26e2f7132a94ca5ad6a482784d8229d289c",
+ "solver": {
+  "config_sets": {
+   "simulink/configSet0.xml": {
+    "name": "Configuration",
+    "StartTime": "0.0",
+    "StopTime": "10.0",
+    "FixedStep": "auto",
+    "EnableMultiTasking": "off",
+    "SolverName": "VariableStepAuto",
+    "SampleTimeConstraint": "Unconstrained",
+    "SystemTargetFile": "grt.tlc",
+    "ExtModeMexArgs": null
+   }
+  },
+  "active_config_set": null
+ },
+ "model_arguments": {},
+ "endpoints": [],
+ "sample_times": [],
+ "constants": [
+  {
+   "block": "Measured Pose",
+   "value": "[0; 0; 1.25; 0]",
+   "explicit": true
+  },
+  {
+   "block": "detected",
+   "value": "1",
+   "explicit": false
+  },
+  {
+   "block": "error_x",
+   "value": "0",
+   "explicit": true
+  },
+  {
+   "block": "error_y",
+   "value": "-100",
+   "explicit": true
+  }
+ ],
+ "charts": [
+  {
+   "member": "simulink/stateflow/chart_13.xml",
+   "chart_id": "13",
+   "instance_path": "YOLOPoseCommandGenerator",
+   "function": "YOLOPoseCommandGenerator",
+   "signature": "function [cmd_pose, forward_cmd, right_cmd, state] = YOLOPoseCommandGenerator(measured_pose, detected, error_x, error_y)",
+   "data": [
+    {
+     "name": "measured_pose",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "cmd_pose",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "detected",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "error_x",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "error_y",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "forward_cmd",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "right_cmd",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "state",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "35c726fad893862b8ecc72c02f6e6d20c326e8ad8aed9efe47625e89d46bf1ce",
+   "has_persistent_state": true
+  }
+ ],
+ "blocks": [
+  {
+   "path": " desired_x",
+   "sid": "6",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "Demux",
+   "sid": "11",
+   "type": "Demux",
+   "params": {
+    "Ports": "[1, 4]"
+   },
+   "defaults_applied": {
+    "Outputs": "4"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "Measured Pose",
+   "sid": "1",
+   "type": "Constant",
+   "params": {
+    "OutDataTypeStr": "double",
+    "Value": "[0; 0; 1.25; 0]"
+   },
+   "defaults_applied": {
+    "SampleTime": "inf"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "YOLO CMD1",
+   "sid": "8",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "YOLO CMD2",
+   "sid": "9",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "YOLO CMD3",
+   "sid": "10",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "YOLOPoseCommandGenerator",
+   "sid": "5",
+   "type": "SubSystem",
+   "params": {
+    "ErrorFcn": "Stateflow.Translate.translate",
+    "PermitHierarchicalResolution": "ExplicitOnly",
+    "Ports": "[4, 4]",
+    "SFBlockType": "MATLAB Function",
+    "TreatAsAtomicUnit": "on"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "YOLOPoseCommandGenerator/measured_pose",
+   "sid": "5::1",
+   "type": "Inport",
+   "params": {},
+   "defaults_applied": {
+    "Port": "1"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "YOLOPoseCommandGenerator/detected",
+   "sid": "5::22",
+   "type": "Inport",
+   "params": {
+    "Port": "2"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "YOLOPoseCommandGenerator/error_x",
+   "sid": "5::23",
+   "type": "Inport",
+   "params": {
+    "Port": "3"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "YOLOPoseCommandGenerator/error_y",
+   "sid": "5::24",
+   "type": "Inport",
+   "params": {
+    "Port": "4"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "YOLOPoseCommandGenerator/ Demux ",
+   "sid": "5::20",
+   "type": "Demux",
+   "params": {
+    "Outputs": "1",
+    "Ports": "[1, 1]"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "YOLOPoseCommandGenerator/ SFunction ",
+   "sid": "5::19",
+   "type": "S-Function",
+   "params": {
+    "EnableBusSupport": "on",
+    "FunctionName": "sf_sfun",
+    "PortCounts": "[4 5]",
+    "Ports": "[4, 5]",
+    "SFcnIsStateOwnerBlock": "off",
+    "SFunctionDeploymentMode": "off",
+    "Tag": "Stateflow S-Function 2"
+   },
+   "defaults_applied": {},
+   "named_ports": [
+    {
+     "PortNumber": "2",
+     "Name": "cmd_pose"
+    },
+    {
+     "PortNumber": "3",
+     "Name": "forward_cmd"
+    },
+    {
+     "PortNumber": "4",
+     "Name": "right_cmd"
+    },
+    {
+     "PortNumber": "5",
+     "Name": "state"
+    }
+   ]
+  },
+  {
+   "path": "YOLOPoseCommandGenerator/ Terminator ",
+   "sid": "5::21",
+   "type": "Terminator",
+   "params": {},
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "YOLOPoseCommandGenerator/cmd_pose",
+   "sid": "5::5",
+   "type": "Outport",
+   "params": {},
+   "defaults_applied": {
+    "Port": "1",
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "YOLOPoseCommandGenerator/forward_cmd",
+   "sid": "5::25",
+   "type": "Outport",
+   "params": {
+    "Port": "2"
+   },
+   "defaults_applied": {
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "YOLOPoseCommandGenerator/right_cmd",
+   "sid": "5::26",
+   "type": "Outport",
+   "params": {
+    "Port": "3"
+   },
+   "defaults_applied": {
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "YOLOPoseCommandGenerator/state",
+   "sid": "5::27",
+   "type": "Outport",
+   "params": {
+    "Port": "4"
+   },
+   "defaults_applied": {
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "desired_y",
+   "sid": "12",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "desired_yaw ",
+   "sid": "14",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "desired_z ",
+   "sid": "13",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "detected",
+   "sid": "4",
+   "type": "Constant",
+   "params": {},
+   "defaults_applied": {
+    "Value": "1",
+    "SampleTime": "inf"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "error_x",
+   "sid": "2",
+   "type": "Constant",
+   "params": {
+    "Value": "0"
+   },
+   "defaults_applied": {
+    "SampleTime": "inf"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "error_y",
+   "sid": "3",
+   "type": "Constant",
+   "params": {
+    "Value": "-100"
+   },
+   "defaults_applied": {
+    "SampleTime": "inf"
+   },
+   "named_ports": []
+  }
+ ],
+ "lines": [
+  {
+   "system": "YOLOPoseCommandGenerator",
+   "src": "YOLOPoseCommandGenerator/measured_pose#out:1",
+   "dst": "YOLOPoseCommandGenerator/ SFunction #in:1"
+  },
+  {
+   "system": "YOLOPoseCommandGenerator",
+   "src": "YOLOPoseCommandGenerator/detected#out:1",
+   "dst": "YOLOPoseCommandGenerator/ SFunction #in:2"
+  },
+  {
+   "system": "YOLOPoseCommandGenerator",
+   "src": "YOLOPoseCommandGenerator/error_x#out:1",
+   "dst": "YOLOPoseCommandGenerator/ SFunction #in:3"
+  },
+  {
+   "system": "YOLOPoseCommandGenerator",
+   "src": "YOLOPoseCommandGenerator/error_y#out:1",
+   "dst": "YOLOPoseCommandGenerator/ SFunction #in:4"
+  },
+  {
+   "system": "YOLOPoseCommandGenerator",
+   "src": "YOLOPoseCommandGenerator/ SFunction #out:2",
+   "dst": "YOLOPoseCommandGenerator/cmd_pose#in:1",
+   "name": "cmd_pose"
+  },
+  {
+   "system": "YOLOPoseCommandGenerator",
+   "src": "YOLOPoseCommandGenerator/ SFunction #out:3",
+   "dst": "YOLOPoseCommandGenerator/forward_cmd#in:1",
+   "name": "forward_cmd"
+  },
+  {
+   "system": "YOLOPoseCommandGenerator",
+   "src": "YOLOPoseCommandGenerator/ SFunction #out:4",
+   "dst": "YOLOPoseCommandGenerator/right_cmd#in:1",
+   "name": "right_cmd"
+  },
+  {
+   "system": "YOLOPoseCommandGenerator",
+   "src": "YOLOPoseCommandGenerator/ SFunction #out:5",
+   "dst": "YOLOPoseCommandGenerator/state#in:1",
+   "name": "state"
+  },
+  {
+   "system": "YOLOPoseCommandGenerator",
+   "src": "YOLOPoseCommandGenerator/ Demux #out:1",
+   "dst": "YOLOPoseCommandGenerator/ Terminator #in:1"
+  },
+  {
+   "system": "YOLOPoseCommandGenerator",
+   "src": "YOLOPoseCommandGenerator/ SFunction #out:1",
+   "dst": "YOLOPoseCommandGenerator/ Demux #in:1"
+  },
+  {
+   "system": "<root>",
+   "src": "Measured Pose#out:1",
+   "dst": "YOLOPoseCommandGenerator#in:1"
+  },
+  {
+   "system": "<root>",
+   "src": "detected#out:1",
+   "dst": "YOLOPoseCommandGenerator#in:2"
+  },
+  {
+   "system": "<root>",
+   "src": "error_x#out:1",
+   "dst": "YOLOPoseCommandGenerator#in:3"
+  },
+  {
+   "system": "<root>",
+   "src": "error_y#out:1",
+   "dst": "YOLOPoseCommandGenerator#in:4"
+  },
+  {
+   "system": "<root>",
+   "src": "YOLOPoseCommandGenerator#out:1",
+   "dst": "Demux#in:1"
+  }
+ ]
+}

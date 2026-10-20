@@ -1,0 +1,391 @@
+{
+ "model": "reference/simulink/QDrone_Recenter_Logic_Test.slx",
+ "sha256": "0bc659704f94bcf45c5942ce4cfb2af7dfc59e079720236f8b8018cefb78b0ec",
+ "solver": {
+  "config_sets": {
+   "simulink/configSet0.xml": {
+    "name": "Configuration",
+    "StartTime": "0.0",
+    "StopTime": "5",
+    "FixedStep": "auto",
+    "EnableMultiTasking": "off",
+    "SolverName": "VariableStepAuto",
+    "SampleTimeConstraint": "Unconstrained",
+    "SystemTargetFile": "grt.tlc",
+    "ExtModeMexArgs": null
+   }
+  },
+  "active_config_set": null
+ },
+ "model_arguments": {},
+ "endpoints": [],
+ "sample_times": [],
+ "constants": [
+  {
+   "block": "detected",
+   "value": "0",
+   "explicit": true
+  },
+  {
+   "block": "error_x",
+   "value": "100",
+   "explicit": true
+  },
+  {
+   "block": "error_y",
+   "value": "100",
+   "explicit": true
+  }
+ ],
+ "charts": [
+  {
+   "member": "simulink/stateflow/chart_12.xml",
+   "chart_id": "12",
+   "instance_path": "LandingPadRecenterLogic",
+   "function": "LandingPadRecenterLogic",
+   "signature": "function [forward_cmd, right_cmd, descend_cmd, state] = LandingPadRecenterLogic(detected, error_x, error_y)",
+   "data": [
+    {
+     "name": "detected",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "forward_cmd",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "error_x",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "error_y",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "right_cmd",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "descend_cmd",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "state",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "62f326d34b4c95c5505ceb886e0604776dff4cafeed781633f99600277c93435",
+   "has_persistent_state": true
+  }
+ ],
+ "blocks": [
+  {
+   "path": "LandingPadRecenterLogic",
+   "sid": "4",
+   "type": "SubSystem",
+   "params": {
+    "ErrorFcn": "Stateflow.Translate.translate",
+    "PermitHierarchicalResolution": "ExplicitOnly",
+    "Ports": "[3, 4]",
+    "SFBlockType": "MATLAB Function",
+    "TreatAsAtomicUnit": "on"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "LandingPadRecenterLogic/detected",
+   "sid": "4::1",
+   "type": "Inport",
+   "params": {},
+   "defaults_applied": {
+    "Port": "1"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "LandingPadRecenterLogic/error_x",
+   "sid": "4::22",
+   "type": "Inport",
+   "params": {
+    "Port": "2"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "LandingPadRecenterLogic/error_y",
+   "sid": "4::23",
+   "type": "Inport",
+   "params": {
+    "Port": "3"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "LandingPadRecenterLogic/ Demux ",
+   "sid": "4::20",
+   "type": "Demux",
+   "params": {
+    "Outputs": "1",
+    "Ports": "[1, 1]"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "LandingPadRecenterLogic/ SFunction ",
+   "sid": "4::19",
+   "type": "S-Function",
+   "params": {
+    "EnableBusSupport": "on",
+    "FunctionName": "sf_sfun",
+    "PortCounts": "[3 5]",
+    "Ports": "[3, 5]",
+    "SFcnIsStateOwnerBlock": "off",
+    "SFunctionDeploymentMode": "off",
+    "Tag": "Stateflow S-Function 2"
+   },
+   "defaults_applied": {},
+   "named_ports": [
+    {
+     "PortNumber": "2",
+     "Name": "forward_cmd"
+    },
+    {
+     "PortNumber": "3",
+     "Name": "right_cmd"
+    },
+    {
+     "PortNumber": "4",
+     "Name": "descend_cmd"
+    },
+    {
+     "PortNumber": "5",
+     "Name": "state"
+    }
+   ]
+  },
+  {
+   "path": "LandingPadRecenterLogic/ Terminator ",
+   "sid": "4::21",
+   "type": "Terminator",
+   "params": {},
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "LandingPadRecenterLogic/forward_cmd",
+   "sid": "4::5",
+   "type": "Outport",
+   "params": {},
+   "defaults_applied": {
+    "Port": "1",
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "LandingPadRecenterLogic/right_cmd",
+   "sid": "4::24",
+   "type": "Outport",
+   "params": {
+    "Port": "2"
+   },
+   "defaults_applied": {
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "LandingPadRecenterLogic/descend_cmd",
+   "sid": "4::25",
+   "type": "Outport",
+   "params": {
+    "Port": "3"
+   },
+   "defaults_applied": {
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "LandingPadRecenterLogic/state",
+   "sid": "4::26",
+   "type": "Outport",
+   "params": {
+    "Port": "4"
+   },
+   "defaults_applied": {
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "descend_cmd_display",
+   "sid": "7",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "detected",
+   "sid": "1",
+   "type": "Constant",
+   "params": {
+    "Value": "0"
+   },
+   "defaults_applied": {
+    "SampleTime": "inf"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "error_x",
+   "sid": "2",
+   "type": "Constant",
+   "params": {
+    "Value": "100"
+   },
+   "defaults_applied": {
+    "SampleTime": "inf"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "error_y",
+   "sid": "3",
+   "type": "Constant",
+   "params": {
+    "Value": "100"
+   },
+   "defaults_applied": {
+    "SampleTime": "inf"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "forward_cmd_display",
+   "sid": "5",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "right_cmd_display ",
+   "sid": "6",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "state_display",
+   "sid": "8",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  }
+ ],
+ "lines": [
+  {
+   "system": "LandingPadRecenterLogic",
+   "src": "LandingPadRecenterLogic/detected#out:1",
+   "dst": "LandingPadRecenterLogic/ SFunction #in:1"
+  },
+  {
+   "system": "LandingPadRecenterLogic",
+   "src": "LandingPadRecenterLogic/error_x#out:1",
+   "dst": "LandingPadRecenterLogic/ SFunction #in:2"
+  },
+  {
+   "system": "LandingPadRecenterLogic",
+   "src": "LandingPadRecenterLogic/error_y#out:1",
+   "dst": "LandingPadRecenterLogic/ SFunction #in:3"
+  },
+  {
+   "system": "LandingPadRecenterLogic",
+   "src": "LandingPadRecenterLogic/ SFunction #out:2",
+   "dst": "LandingPadRecenterLogic/forward_cmd#in:1",
+   "name": "forward_cmd"
+  },
+  {
+   "system": "LandingPadRecenterLogic",
+   "src": "LandingPadRecenterLogic/ SFunction #out:3",
+   "dst": "LandingPadRecenterLogic/right_cmd#in:1",
+   "name": "right_cmd"
+  },
+  {
+   "system": "LandingPadRecenterLogic",
+   "src": "LandingPadRecenterLogic/ SFunction #out:4",
+   "dst": "LandingPadRecenterLogic/descend_cmd#in:1",
+   "name": "descend_cmd"
+  },
+  {
+   "system": "LandingPadRecenterLogic",
+   "src": "LandingPadRecenterLogic/ SFunction #out:5",
+   "dst": "LandingPadRecenterLogic/state#in:1",
+   "name": "state"
+  },
+  {
+   "system": "LandingPadRecenterLogic",
+   "src": "LandingPadRecenterLogic/ Demux #out:1",
+   "dst": "LandingPadRecenterLogic/ Terminator #in:1"
+  },
+  {
+   "system": "LandingPadRecenterLogic",
+   "src": "LandingPadRecenterLogic/ SFunction #out:1",
+   "dst": "LandingPadRecenterLogic/ Demux #in:1"
+  },
+  {
+   "system": "<root>",
+   "src": "detected#out:1",
+   "dst": "LandingPadRecenterLogic#in:1"
+  },
+  {
+   "system": "<root>",
+   "src": "error_x#out:1",
+   "dst": "LandingPadRecenterLogic#in:2"
+  },
+  {
+   "system": "<root>",
+   "src": "error_y#out:1",
+   "dst": "LandingPadRecenterLogic#in:3"
+  }
+ ]
+}

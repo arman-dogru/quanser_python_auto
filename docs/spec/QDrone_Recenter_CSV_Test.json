@@ -1,0 +1,559 @@
+{
+ "model": "reference/simulink/QDrone_Recenter_CSV_Test.slx",
+ "sha256": "0ff49f2a2d9afc62deba4261336632d40c28a22f4fb503376e567cb018fa53ea",
+ "solver": {
+  "config_sets": {
+   "simulink/configSet0.xml": {
+    "name": "Configuration",
+    "StartTime": "0.0",
+    "StopTime": "sim_stop_time",
+    "FixedStep": "1/30",
+    "EnableMultiTasking": "off",
+    "SolverName": "FixedStepDiscrete",
+    "SampleTimeConstraint": "Unconstrained",
+    "SystemTargetFile": "grt.tlc",
+    "ExtModeMexArgs": null
+   }
+  },
+  "active_config_set": null
+ },
+ "model_arguments": {},
+ "endpoints": [],
+ "sample_times": [],
+ "constants": [],
+ "charts": [
+  {
+   "member": "simulink/stateflow/chart_12.xml",
+   "chart_id": "12",
+   "instance_path": "Landing Pad Recenter Controller/LandingPadRecenterLogic",
+   "function": "LandingPadRecenterLogic",
+   "signature": "function [forward_cmd, right_cmd, descend_cmd, state] = LandingPadRecenterLogic(detected, error_x, error_y)",
+   "data": [
+    {
+     "name": "detected",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "forward_cmd",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "error_x",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "error_y",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "right_cmd",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "descend_cmd",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "state",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "62f326d34b4c95c5505ceb886e0604776dff4cafeed781633f99600277c93435",
+   "has_persistent_state": true
+  }
+ ],
+ "blocks": [
+  {
+   "path": "Landing Pad Recenter Controller",
+   "sid": "16",
+   "type": "SubSystem",
+   "params": {
+    "Ports": "[3, 4]"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/detected",
+   "sid": "17",
+   "type": "Inport",
+   "params": {},
+   "defaults_applied": {
+    "Port": "1"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/error_x",
+   "sid": "18",
+   "type": "Inport",
+   "params": {
+    "Port": "2"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/error_y",
+   "sid": "19",
+   "type": "Inport",
+   "params": {
+    "Port": "3"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/LandingPadRecenterLogic",
+   "sid": "4",
+   "type": "SubSystem",
+   "params": {
+    "ErrorFcn": "Stateflow.Translate.translate",
+    "PermitHierarchicalResolution": "ExplicitOnly",
+    "Ports": "[3, 4]",
+    "SFBlockType": "MATLAB Function",
+    "TreatAsAtomicUnit": "on"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/LandingPadRecenterLogic/detected",
+   "sid": "4::1",
+   "type": "Inport",
+   "params": {},
+   "defaults_applied": {
+    "Port": "1"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/LandingPadRecenterLogic/error_x",
+   "sid": "4::22",
+   "type": "Inport",
+   "params": {
+    "Port": "2"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/LandingPadRecenterLogic/error_y",
+   "sid": "4::23",
+   "type": "Inport",
+   "params": {
+    "Port": "3"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ Demux ",
+   "sid": "4::20",
+   "type": "Demux",
+   "params": {
+    "Outputs": "1",
+    "Ports": "[1, 1]"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ SFunction ",
+   "sid": "4::19",
+   "type": "S-Function",
+   "params": {
+    "EnableBusSupport": "on",
+    "FunctionName": "sf_sfun",
+    "PortCounts": "[3 5]",
+    "Ports": "[3, 5]",
+    "SFcnIsStateOwnerBlock": "off",
+    "SFunctionDeploymentMode": "off",
+    "Tag": "Stateflow S-Function 2"
+   },
+   "defaults_applied": {},
+   "named_ports": [
+    {
+     "PortNumber": "2",
+     "Name": "forward_cmd"
+    },
+    {
+     "PortNumber": "3",
+     "Name": "right_cmd"
+    },
+    {
+     "PortNumber": "4",
+     "Name": "descend_cmd"
+    },
+    {
+     "PortNumber": "5",
+     "Name": "state"
+    }
+   ]
+  },
+  {
+   "path": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ Terminator ",
+   "sid": "4::21",
+   "type": "Terminator",
+   "params": {},
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/LandingPadRecenterLogic/forward_cmd",
+   "sid": "4::5",
+   "type": "Outport",
+   "params": {},
+   "defaults_applied": {
+    "Port": "1",
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/LandingPadRecenterLogic/right_cmd",
+   "sid": "4::24",
+   "type": "Outport",
+   "params": {
+    "Port": "2"
+   },
+   "defaults_applied": {
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/LandingPadRecenterLogic/descend_cmd",
+   "sid": "4::25",
+   "type": "Outport",
+   "params": {
+    "Port": "3"
+   },
+   "defaults_applied": {
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/LandingPadRecenterLogic/state",
+   "sid": "4::26",
+   "type": "Outport",
+   "params": {
+    "Port": "4"
+   },
+   "defaults_applied": {
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/forward_cmd",
+   "sid": "20",
+   "type": "Outport",
+   "params": {},
+   "defaults_applied": {
+    "Port": "1",
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/right_cmd",
+   "sid": "21",
+   "type": "Outport",
+   "params": {
+    "Port": "2"
+   },
+   "defaults_applied": {
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/descend_cmd",
+   "sid": "22",
+   "type": "Outport",
+   "params": {
+    "Port": "3"
+   },
+   "defaults_applied": {
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "Landing Pad Recenter Controller/state",
+   "sid": "23",
+   "type": "Outport",
+   "params": {
+    "Port": "4"
+   },
+   "defaults_applied": {
+    "InitialOutput": "[]"
+   },
+   "named_ports": []
+  },
+  {
+   "path": "descend_cmd",
+   "sid": "14",
+   "type": "Scope",
+   "params": {
+    "NumInputPorts": "1",
+    "Ports": "[1]"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "descend_cmd_display",
+   "sid": "7",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Commented": "on",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "detected_from_csv",
+   "sid": "9",
+   "type": "FromWorkspace",
+   "params": {
+    "VariableName": "detected_data"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "error_x_from_csv",
+   "sid": "10",
+   "type": "FromWorkspace",
+   "params": {
+    "VariableName": "error_x_data"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "error_y_from_csv",
+   "sid": "11",
+   "type": "FromWorkspace",
+   "params": {
+    "VariableName": "error_y_data"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "forward_cmd",
+   "sid": "12",
+   "type": "Scope",
+   "params": {
+    "NumInputPorts": "1",
+    "Ports": "[1]"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "forward_cmd_display",
+   "sid": "5",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Commented": "on",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "right_cmd",
+   "sid": "13",
+   "type": "Scope",
+   "params": {
+    "NumInputPorts": "2",
+    "Ports": "[2]"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "right_cmd_display ",
+   "sid": "6",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Commented": "on",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "state",
+   "sid": "15",
+   "type": "Scope",
+   "params": {
+    "NumInputPorts": "1",
+    "Ports": "[1]"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  },
+  {
+   "path": "state_display",
+   "sid": "8",
+   "type": "DisplayBlock",
+   "params": {
+    "BindingPersistence": "",
+    "Commented": "on",
+    "Format": "short",
+    "GridColor": "",
+    "LabelPosition": "Hide",
+    "Transparency": "1"
+   },
+   "defaults_applied": {},
+   "named_ports": []
+  }
+ ],
+ "lines": [
+  {
+   "system": "Landing Pad Recenter Controller/LandingPadRecenterLogic",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic/detected#out:1",
+   "dst": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ SFunction #in:1"
+  },
+  {
+   "system": "Landing Pad Recenter Controller/LandingPadRecenterLogic",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic/error_x#out:1",
+   "dst": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ SFunction #in:2"
+  },
+  {
+   "system": "Landing Pad Recenter Controller/LandingPadRecenterLogic",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic/error_y#out:1",
+   "dst": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ SFunction #in:3"
+  },
+  {
+   "system": "Landing Pad Recenter Controller/LandingPadRecenterLogic",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ SFunction #out:2",
+   "dst": "Landing Pad Recenter Controller/LandingPadRecenterLogic/forward_cmd#in:1",
+   "name": "forward_cmd"
+  },
+  {
+   "system": "Landing Pad Recenter Controller/LandingPadRecenterLogic",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ SFunction #out:3",
+   "dst": "Landing Pad Recenter Controller/LandingPadRecenterLogic/right_cmd#in:1",
+   "name": "right_cmd"
+  },
+  {
+   "system": "Landing Pad Recenter Controller/LandingPadRecenterLogic",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ SFunction #out:4",
+   "dst": "Landing Pad Recenter Controller/LandingPadRecenterLogic/descend_cmd#in:1",
+   "name": "descend_cmd"
+  },
+  {
+   "system": "Landing Pad Recenter Controller/LandingPadRecenterLogic",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ SFunction #out:5",
+   "dst": "Landing Pad Recenter Controller/LandingPadRecenterLogic/state#in:1",
+   "name": "state"
+  },
+  {
+   "system": "Landing Pad Recenter Controller/LandingPadRecenterLogic",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ Demux #out:1",
+   "dst": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ Terminator #in:1"
+  },
+  {
+   "system": "Landing Pad Recenter Controller/LandingPadRecenterLogic",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ SFunction #out:1",
+   "dst": "Landing Pad Recenter Controller/LandingPadRecenterLogic/ Demux #in:1"
+  },
+  {
+   "system": "Landing Pad Recenter Controller",
+   "src": "Landing Pad Recenter Controller/error_y#out:1",
+   "dst": "Landing Pad Recenter Controller/LandingPadRecenterLogic#in:3"
+  },
+  {
+   "system": "Landing Pad Recenter Controller",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic#out:3",
+   "dst": "Landing Pad Recenter Controller/descend_cmd#in:1"
+  },
+  {
+   "system": "Landing Pad Recenter Controller",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic#out:2",
+   "dst": "Landing Pad Recenter Controller/right_cmd#in:1"
+  },
+  {
+   "system": "Landing Pad Recenter Controller",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic#out:1",
+   "dst": "Landing Pad Recenter Controller/forward_cmd#in:1"
+  },
+  {
+   "system": "Landing Pad Recenter Controller",
+   "src": "Landing Pad Recenter Controller/LandingPadRecenterLogic#out:4",
+   "dst": "Landing Pad Recenter Controller/state#in:1"
+  },
+  {
+   "system": "Landing Pad Recenter Controller",
+   "src": "Landing Pad Recenter Controller/error_x#out:1",
+   "dst": "Landing Pad Recenter Controller/LandingPadRecenterLogic#in:2"
+  },
+  {
+   "system": "Landing Pad Recenter Controller",
+   "src": "Landing Pad Recenter Controller/detected#out:1",
+   "dst": "Landing Pad Recenter Controller/LandingPadRecenterLogic#in:1"
+  },
+  {
+   "system": "<root>",
+   "src": "detected_from_csv#out:1",
+   "dst": "Landing Pad Recenter Controller#in:1"
+  },
+  {
+   "system": "<root>",
+   "src": "error_x_from_csv#out:1",
+   "dst": "Landing Pad Recenter Controller#in:2"
+  },
+  {
+   "system": "<root>",
+   "src": "error_y_from_csv#out:1",
+   "dst": "Landing Pad Recenter Controller#in:3"
+  },
+  {
+   "system": "<root>",
+   "src": "Landing Pad Recenter Controller#out:1",
+   "dst": "forward_cmd#in:1"
+  },
+  {
+   "system": "<root>",
+   "src": "Landing Pad Recenter Controller#out:2",
+   "dst": "right_cmd#in:1"
+  },
+  {
+   "system": "<root>",
+   "src": "Landing Pad Recenter Controller#out:3",
+   "dst": "descend_cmd#in:1"
+  },
+  {
+   "system": "<root>",
+   "src": "Landing Pad Recenter Controller#out:4",
+   "dst": "state#in:1"
+  }
+ ]
+}
