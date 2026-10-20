@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+runs/
+saved_data/
+data/
+slprj/
+*_quarc_*/
+*.slxc
+*.asv

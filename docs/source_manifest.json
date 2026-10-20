@@ -1,0 +1,203 @@
+{
+  "copied_files": [
+    {
+      "source": "sources/alignToPadController.m",
+      "repository_path": "reference/matlab/legacy/alignToPadController.m",
+      "sha256": "75e9781bff063775514bf7281981dd982ffd83653476b0b25bf0a979fc65ac9f",
+      "bytes": 650
+    },
+    {
+      "source": "sources/config.m",
+      "repository_path": "reference/matlab/legacy/config.m",
+      "sha256": "8b6e787c7f1eeb60f30baa459392a04e58878b887880497ece52da435c6647ce",
+      "bytes": 4118
+    },
+    {
+      "source": "sources/count_yolo_results.py",
+      "repository_path": "tools/dataset_legacy/count_yolo_results.py",
+      "sha256": "b032a4c090da0e7a6a77516799309997826fca9db174471af482d0849e17b74c",
+      "bytes": 2526
+    },
+    {
+      "source": "sources/descendController.m",
+      "repository_path": "reference/matlab/legacy/descendController.m",
+      "sha256": "f21172c1708753f6541f8273c32593e56ad5b3f55326c31e9112dcd85e0f302f",
+      "bytes": 555
+    },
+    {
+      "source": "sources/detectLandingPad.m",
+      "repository_path": "reference/matlab/legacy/detectLandingPad.m",
+      "sha256": "7f64aa497102360fbae807d08bbc8ace62946e0e8dfe4af4307603ce9fa10f93",
+      "bytes": 7395
+    },
+    {
+      "source": "sources/estimateDronePosition.m",
+      "repository_path": "reference/matlab/legacy/estimateDronePosition.m",
+      "sha256": "2794a1792fc1001af831acbd93a72b69919b392bcabd683e58e9fe58c7c296dd",
+      "bytes": 256
+    },
+    {
+      "source": "sources/generateGridWaypoints.m",
+      "repository_path": "reference/matlab/legacy/generateGridWaypoints.m",
+      "sha256": "db2cbd55bfbfacb9d8215f1ac890bb6c831d5f3fca91d9f51ea7dd45d980c366",
+      "bytes": 883
+    },
+    {
+      "source": "sources/getCameraFrame.m",
+      "repository_path": "reference/matlab/legacy/getCameraFrame.m",
+      "sha256": "f1776e7e1e39d10ec45bd9ad2618efe380892729b345452b25fbd475676bd96f",
+      "bytes": 319
+    },
+    {
+      "source": "sources/landing_experiment.mlx",
+      "repository_path": "reference/experiments/landing_experiment.mlx",
+      "sha256": "f691ab28d5873d1e935634078d378cb2cc0f96fe4ef14f8667c02f4a199ce111",
+      "bytes": 7267
+    },
+    {
+      "source": "sources/main_landing.m",
+      "repository_path": "reference/matlab/legacy/main_landing.m",
+      "sha256": "9b2c048b6ff5c90aac7ded53f652e74e435ff54761926d5238d9781ee4561b6c",
+      "bytes": 1797
+    },
+    {
+      "source": "sources/merge_roboflow_with_negatives.py",
+      "repository_path": "tools/dataset_legacy/merge_roboflow_with_negatives.py",
+      "sha256": "779a2e2afe76299744e63846b1cac87b8127a842771bb90fe06a46c6c5e9e01d",
+      "bytes": 5415
+    },
+    {
+      "source": "sources/prepare_yolo_dataset_synthetic.py",
+      "repository_path": "tools/dataset_legacy/prepare_yolo_dataset_synthetic.py",
+      "sha256": "9667696979a222a7194bb187851b75dc5dbbd717a057bc616b35547ad381e856",
+      "bytes": 5962
+    },
+    {
+      "source": "sources/prepare_yolo_dataset_v2.py",
+      "repository_path": "tools/dataset_legacy/prepare_yolo_dataset_v2.py",
+      "sha256": "01615832a243a71063466eec5c9c5acb354aaefab25ec478457ba6d12d72b37c",
+      "bytes": 4301
+    },
+    {
+      "source": "sources/QDrone_Recenter_CSV_Test.slx",
+      "repository_path": "reference/simulink/QDrone_Recenter_CSV_Test.slx",
+      "sha256": "0ff49f2a2d9afc62deba4261336632d40c28a22f4fb503376e567cb018fa53ea",
+      "bytes": 44658
+    },
+    {
+      "source": "sources/QDrone_Recenter_Logic_Test.slx",
+      "repository_path": "reference/simulink/QDrone_Recenter_Logic_Test.slx",
+      "sha256": "0bc659704f94bcf45c5942ce4cfb2af7dfc59e079720236f8b8018cefb78b0ec",
+      "bytes": 35167
+    },
+    {
+      "source": "sources/QDrone_YOLO_Pose_Command_Test.slx",
+      "repository_path": "reference/simulink/QDrone_YOLO_Pose_Command_Test.slx",
+      "sha256": "2daa1cd1295289e67f923b90305fe26e2f7132a94ca5ad6a482784d8229d289c",
+      "bytes": 42123
+    },
+    {
+      "source": "sources/QDrone_YOLO_Recenter_Integration_Test.slx",
+      "repository_path": "reference/simulink/QDrone_YOLO_Recenter_Integration_Test.slx",
+      "sha256": "8147ae0887fa07ab14127e76a9728ee1576674264209e76c0b2b6d6773fd35e9",
+      "bytes": 263580
+    },
+    {
+      "source": "sources/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly.slx",
+      "repository_path": "reference/simulink/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly.slx",
+      "sha256": "d1a52caf16c552ee2085dde94fb1c842b40be45707576f61f8b1bc184ce22b29",
+      "bytes": 254069
+    },
+    {
+      "source": "sources/Screenshot 2026-05-28 140224.png",
+      "repository_path": "reference/experiments/Screenshot 2026-05-28 140224.png",
+      "sha256": "9cc7176a8d2ceca1a17b50ab6ad53aff821d43f80530665130de3e4542dab589",
+      "bytes": 45265
+    },
+    {
+      "source": "sources/sendDroneCommand.m",
+      "repository_path": "reference/matlab/legacy/sendDroneCommand.m",
+      "sha256": "20a51a6bc4f4ed59389770906a7d8b16270d309d7f9bf2ae4fdf1fde232b1f6e",
+      "bytes": 91
+    },
+    {
+      "source": "sources/waypointController.m",
+      "repository_path": "reference/matlab/legacy/waypointController.m",
+      "sha256": "962b26bfb61adef161ecade20c938f5cf361ca9b6a41096d5985a675e069f8ec",
+      "bytes": 304
+    },
+    {
+      "source": "sources/yolo11n.pt",
+      "repository_path": "models/yolo11n.pt",
+      "sha256": "0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1",
+      "bytes": 5613764
+    }
+  ],
+  "extracted_scripts": [
+    {
+      "model": "reference/simulink/QDrone_Recenter_CSV_Test.slx",
+      "member": "simulink/stateflow/chart_12.xml",
+      "path": "reference/extracted/QDrone_Recenter_CSV_Test/chart_12_LandingPadRecenterLogic.m"
+    },
+    {
+      "model": "reference/simulink/QDrone_Recenter_Logic_Test.slx",
+      "member": "simulink/stateflow/chart_12.xml",
+      "path": "reference/extracted/QDrone_Recenter_Logic_Test/chart_12_LandingPadRecenterLogic.m"
+    },
+    {
+      "model": "reference/simulink/QDrone_YOLO_Pose_Command_Test.slx",
+      "member": "simulink/stateflow/chart_13.xml",
+      "path": "reference/extracted/QDrone_YOLO_Pose_Command_Test/chart_13_YOLOPoseCommandGenerator.m"
+    },
+    {
+      "model": "reference/simulink/QDrone_YOLO_Recenter_Integration_Test.slx",
+      "member": "simulink/stateflow/chart_14.xml",
+      "path": "reference/extracted/QDrone_YOLO_Recenter_Integration_Test/chart_14_fcn.m"
+    },
+    {
+      "model": "reference/simulink/QDrone_YOLO_Recenter_Integration_Test.slx",
+      "member": "simulink/stateflow/chart_24.xml",
+      "path": "reference/extracted/QDrone_YOLO_Recenter_Integration_Test/chart_24_fcn.m"
+    },
+    {
+      "model": "reference/simulink/QDrone_YOLO_Recenter_Integration_Test.slx",
+      "member": "simulink/stateflow/chart_34.xml",
+      "path": "reference/extracted/QDrone_YOLO_Recenter_Integration_Test/chart_34_fcn.m"
+    },
+    {
+      "model": "reference/simulink/QDrone_YOLO_Recenter_Integration_Test.slx",
+      "member": "simulink/stateflow/chart_43.xml",
+      "path": "reference/extracted/QDrone_YOLO_Recenter_Integration_Test/chart_43_fcn.m"
+    },
+    {
+      "model": "reference/simulink/QDrone_YOLO_Recenter_Integration_Test.slx",
+      "member": "simulink/stateflow/chart_52.xml",
+      "path": "reference/extracted/QDrone_YOLO_Recenter_Integration_Test/chart_52_YOLOPoseCommandGenerator.m"
+    },
+    {
+      "model": "reference/simulink/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly.slx",
+      "member": "simulink/stateflow/chart_13.xml",
+      "path": "reference/extracted/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly/chart_13_fcn.m"
+    },
+    {
+      "model": "reference/simulink/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly.slx",
+      "member": "simulink/stateflow/chart_23.xml",
+      "path": "reference/extracted/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly/chart_23_fcn.m"
+    },
+    {
+      "model": "reference/simulink/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly.slx",
+      "member": "simulink/stateflow/chart_33.xml",
+      "path": "reference/extracted/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly/chart_33_fcn.m"
+    },
+    {
+      "model": "reference/simulink/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly.slx",
+      "member": "simulink/stateflow/chart_42.xml",
+      "path": "reference/extracted/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly/chart_42_fcn.m"
+    },
+    {
+      "model": "reference/simulink/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly.slx",
+      "member": "simulink/stateflow/chart_51.xml",
+      "path": "reference/extracted/QDrone_YOLO_Stage6_RealYOLO_MonitorOnly/chart_51_YOLOPoseCommandGenerator.m"
+    }
+  ]
+}
