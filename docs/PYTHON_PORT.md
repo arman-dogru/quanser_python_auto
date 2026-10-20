@@ -1,5 +1,12 @@
 # Python port handoff
 
+> Status (python-port branch): steps 1–3 of the sequence below are
+> implemented, with the Stage 6 controller checked bit-exact against Octave
+> rather than MATLAB. The model's stream blocks were inspected; see
+> [SIMULINK_SPEC.md](SIMULINK_SPEC.md) for what they show and
+> [PORT_NOTES.md](PORT_NOTES.md) for assumptions. This file is kept as the
+> original handoff.
+
 ## Controller contract from Stage 6
 
 Input measured_pose is [x, y, z, yaw]. Detection inputs are detected, error_x, error_y, with pixel errors defined as pad center minus image center. The embedded controller assumes 640 x 480 images, center (320, 240).

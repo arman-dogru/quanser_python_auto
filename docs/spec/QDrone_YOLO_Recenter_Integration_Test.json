@@ -37,7 +37,10 @@
     "ExtModeMexArgs": "'-w -d %d -uri %u -URI_Leader tcpip://localhost:18001 -URI_Follower tcpip://localhost:18002'"
    }
   },
-  "active_config_set": null
+  "active_config_set": {
+   "part": "simulink/configSet2.xml",
+   "name": "Configuration2"
+  }
  },
  "model_arguments": {
   "URI_Leader": "tcpip://localhost:18001",
@@ -56,7 +59,8 @@
    "block": "Communication - QBot 2e/Stream Server",
    "param": "uri",
    "uri": "tcpip://localhost:18877",
-   "used": false
+   "used": false,
+   "note": "uri_source = External input port; the dialog URI is ignored"
   },
   {
    "block": "Communication - QDrone/Model Argument",
@@ -70,13 +74,15 @@
    "block": "Communication - QDrone/Stream Server",
    "param": "uri",
    "uri": "tcpip://localhost:18877",
-   "used": false
+   "used": false,
+   "note": "uri_source = External input port; the dialog URI is ignored"
   },
   {
    "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Initialize",
    "param": "uri",
    "uri": "tcpip://localhost:18001",
-   "used": true
+   "used": false,
+   "note": "uri_source = Use external mode communications; the dialog URI is ignored (connection rides on external mode)"
   }
  ],
  "sample_times": [

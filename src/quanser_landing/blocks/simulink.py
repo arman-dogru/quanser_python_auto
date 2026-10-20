@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import math
 import operator
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import Callable, Sequence
 
 _OPS: dict[str, Callable[[float, float], bool]] = {
     ">": operator.gt, ">=": operator.ge, "<": operator.lt,

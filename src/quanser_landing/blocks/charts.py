@@ -10,8 +10,8 @@ Both are stateless. Parity with the ``.m`` files is checked against Octave.
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 
 class MatlabIndexError(ValueError):

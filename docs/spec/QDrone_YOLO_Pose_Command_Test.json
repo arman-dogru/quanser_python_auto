@@ -15,7 +15,10 @@
     "ExtModeMexArgs": null
    }
   },
-  "active_config_set": null
+  "active_config_set": {
+   "part": "simulink/configSet0.xml",
+   "name": "Configuration"
+  }
  },
  "model_arguments": {},
  "endpoints": [],

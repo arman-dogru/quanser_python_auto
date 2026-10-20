@@ -11,8 +11,7 @@ import pytest
 from conftest import ROOT, load_fixture, same
 
 from quanser_landing.blocks import MatlabIndexError, detect_stream_connection_loss, extract_object_data
-from quanser_landing.controllers import LandingPadRecenterLogic, PoseCommandConfig, YOLOPoseCommandGenerator
-from quanser_landing.controllers import legacy
+from quanser_landing.controllers import LandingPadRecenterLogic, PoseCommandConfig, YOLOPoseCommandGenerator, legacy
 
 POSE = load_fixture("pose_command")
 POSE_DESCENT = load_fixture("pose_command_descent_enabled")
@@ -35,10 +34,10 @@ def _run_pose(cases, config):
     mismatches = []
     for case in cases:
         gen = YOLOPoseCommandGenerator(config=config)
-        for k, (inp, exp) in enumerate(zip(case["inputs"], case["expected"])):
+        for k, (inp, exp) in enumerate(zip(case["inputs"], case["expected"], strict=True)):
             out = gen.step(inp[0:4], inp[4], inp[5], inp[6])
             got = [*out.cmd_pose, out.forward_cmd, out.right_cmd, float(out.state)]
-            if not all(same(g, e) for g, e in zip(got, exp)):
+            if not all(same(g, e) for g, e in zip(got, exp, strict=True)):
                 mismatches.append((case["name"], k, got, exp))
     return mismatches
 
@@ -63,10 +62,10 @@ def test_recenter_parity_bit_exact():
     mismatches = []
     for case in RECENTER["cases"]:
         ctl = LandingPadRecenterLogic()
-        for k, (inp, exp) in enumerate(zip(case["inputs"], case["expected"])):
+        for k, (inp, exp) in enumerate(zip(case["inputs"], case["expected"], strict=True)):
             out = ctl.step(*inp)
             got = [out.forward_cmd, out.right_cmd, out.descend_cmd, float(out.state)]
-            if not all(same(g, e) for g, e in zip(got, exp)):
+            if not all(same(g, e) for g, e in zip(got, exp, strict=True)):
                 mismatches.append((case["name"], k, got, exp))
     assert mismatches == []
 
@@ -80,7 +79,7 @@ def test_extract_object_data_parity():
         else:
             o = extract_object_data(data, row["index"])
             got = [*o.position, *o.orientation, o.tracking]
-            assert all(same(g, e) for g, e in zip(got, row["expected"])), row
+            assert all(same(g, e) for g, e in zip(got, row["expected"], strict=True)), row
 
 
 def test_comm_loss_parity():
@@ -107,7 +106,7 @@ def test_legacy_controllers_parity(kind):
         else:
             cmd, flag = legacy.descend(i[4:7], (int(i[0]), int(i[1])), i[2:4], p)
         got = [*cmd, float(flag)]
-        assert all(same(g, e) for g, e in zip(got, row["expected"])), (kind, row, got)
+        assert all(same(g, e) for g, e in zip(got, row["expected"], strict=True)), (kind, row, got)
 
 
 def test_legacy_grid_parity():
@@ -120,7 +119,7 @@ def test_legacy_grid_parity():
         exp = row["expected"]
         assert len(pts) == int(exp[0]), row
         flat = [v for pt in pts for v in pt]
-        assert all(same(g, e) for g, e in zip(flat, exp[1:])), (row, flat)
+        assert all(same(g, e) for g, e in zip(flat, exp[1:], strict=True)), (row, flat)
 
 
 def test_shared_chart_copies_are_identical():

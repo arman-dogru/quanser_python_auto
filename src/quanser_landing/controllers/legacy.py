@@ -21,7 +21,7 @@ Faithfully reproduced quirks (see ``docs/PORT_NOTES.md``):
 from __future__ import annotations
 
 import math
-from typing import Sequence
+from collections.abc import Sequence
 
 from ._matlab import mmax, mmin
 
@@ -95,7 +95,7 @@ def descend(drone_pos: Sequence[float], image_size: tuple[int, int],
 def waypoint(drone_pos: Sequence[float], target: Sequence[float],
              params: dict) -> tuple[list[float], bool]:
     """``waypointController``; returns ``(command, waypoint_reached)``."""
-    err = [t - p for t, p in zip(target, drone_pos)]
+    err = [t - p for t, p in zip(target, drone_pos, strict=True)]
     cmd = _sat([params["kp_waypoint"] * e for e in err], params["maxSpeed"])
     return cmd, bool(_norm(err) < params["waypointTolerance"])
 

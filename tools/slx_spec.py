@@ -203,7 +203,8 @@ class Model:
         out = {}
         try:
             info = ET.fromstring(self.zf.read("simulink/configSetInfo.xml"))
-            active = _p(info).get("ActiveConfigurationSet") or info.findtext(".//P")
+            act = [c for c in info.iter("ConfigSet") if c.get("Active") == "true"]
+            active = ({"part": act[0].get("PartName").lstrip("/"), "name": act[0].text} if act else None)
         except KeyError:
             active = None
         names = sorted(n for n in self.zf.namelist() if re.match(r"simulink/configSet\d+\.xml", n))
@@ -249,8 +250,14 @@ def build_spec(path: Path) -> dict:
         merged = {**b["defaults_applied"], **b["params"]}
         for k, v in b["params"].items():
             for uri in URI_RE.findall(v):
-                endpoints.append({"block": b["path"], "param": k, "uri": uri,
-                                  "used": not (k == "uri" and merged.get("uri_source") == "External input port")})
+                ep = {"block": b["path"], "param": k, "uri": uri, "used": True}
+                src = merged.get("uri_source")
+                if k == "uri" and src == "External input port":
+                    ep.update(used=False, note="uri_source = External input port; the dialog URI is ignored")
+                elif k == "uri" and src == "Use external mode communications":
+                    ep.update(used=False, note="uri_source = Use external mode communications; the dialog URI "
+                                               "is ignored (connection rides on external mode)")
+                endpoints.append(ep)
         if merged.get("argument_name"):
             endpoints.append({"block": b["path"], "param": "argument_name", "model_argument": merged["argument_name"],
                               "uri": margs.get(merged["argument_name"]), "used": True,
@@ -285,16 +292,19 @@ def to_markdown(spec: dict) -> str:
                    f"target={s.get('SystemTargetFile')}")
     if spec["model_arguments"]:
         out.append(f"- Model arguments (ExtModeMexArgs): {spec['model_arguments']}")
-    out += ["", "## Communication endpoints", "", "| Block | Parameter | URI | Used by the block |", "|---|---|---|---|"]
+    out += ["", "## Communication endpoints", "",
+            "| Block | Parameter | URI | Used by the block |", "|---|---|---|---|"]
     for e in spec["endpoints"]:
-        out.append(f"| {e['block']} | {e['param']} | `{e.get('uri')}` | {'yes' if e['used'] else 'no (URI comes from input port)'} |")
+        used = "yes" if e["used"] else "no: " + e.get("note", "")
+        out.append(f"| {e['block']} | {e['param']} | `{e.get('uri')}` | {used} |")
     out += ["", "## Stream / device blocks", ""]
     for b in spec["blocks"]:
         if b["type"] == "Reference" and any(s in b["params"].get("SourceBlock", "") for s in
                                             ("Stream", "OptiTrack", "Game Controller", "Host Initialize")):
             keep = {k: v for k, v in b["params"].items() if k not in ("SourceProductName", "SourceType")}
             out.append(f"- **{b['path']}**: `{json.dumps(keep, ensure_ascii=False)}`")
-    out += ["", "## MATLAB Function charts", "", "| Chart | Instance | Signature | Persistent state |", "|---|---|---|---|"]
+    out += ["", "## MATLAB Function charts", "",
+            "| Chart | Instance | Signature | Persistent state |", "|---|---|---|---|"]
     for c in spec["charts"]:
         out.append(f"| {c['member']} | {c['instance_path']} | `{c['signature']}` | {c['has_persistent_state']} |")
     out += ["", "## Constants", "", "| Block | Value | Stored explicitly |", "|---|---|---|"]

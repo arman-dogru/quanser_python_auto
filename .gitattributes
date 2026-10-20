@@ -3,3 +3,10 @@
 *.mlx binary
 *.pt binary
 *.png binary
+
+# The supplied originals use CRLF and docs/source_manifest.json records their
+# CRLF bytes. Check them out with CRLF on every platform so
+# tools/verify_snapshot.py can verify them byte for byte. (The blobs in Git
+# are LF-normalized by text=auto; this only affects the working tree.)
+reference/matlab/legacy/*.m text eol=crlf
+tools/dataset_legacy/*.py text eol=crlf

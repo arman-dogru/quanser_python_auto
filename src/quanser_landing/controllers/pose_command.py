@@ -29,9 +29,9 @@ Semantics, kept exactly as in the MATLAB source:
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Sequence
 
 from ._matlab import clamp
 
