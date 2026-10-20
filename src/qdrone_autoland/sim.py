@@ -18,6 +18,7 @@ The *mission side* is the real runtime (guards -> core -> output gate). The
 """
 from __future__ import annotations
 
+import dataclasses
 import math
 from dataclasses import dataclass, field
 
@@ -28,9 +29,10 @@ from .config import DEFAULT, Config
 from .mission_server import OptiTrackSample
 from .protocol import VISION
 from .runtime import MissionRuntime, RawInputs
-from .safety import Mode
+from .safety import GateStatus, Mode
 
 WALL0 = 1_760_000_000.0
+_GATE_CODE = {GateStatus.OK: 0.0, GateStatus.CENTRING_REFUSED: 1.0, GateStatus.CENTRING_FAULT: 2.0}
 
 
 @dataclass
@@ -138,7 +140,7 @@ def project_pad(cfg: Config, pad_xy, pos, yaw) -> tuple[float, float] | None:
 
 SIGNALS = ("x", "y", "z", "dx", "dy", "dz", "stage", "abort", "ready", "fresh", "reason", "confirmed",
            "trig1", "trig2", "trig3", "trig4", "op_trig2", "latched", "vision_age", "tracking", "faults",
-           "pix_ex", "pix_ey", "abort_bits", "model_trig2")
+           "pix_ex", "pix_ey", "abort_bits", "model_trig2", "gate_status")
 
 
 def run(scenario: Scenario | str, cfg: Config = DEFAULT, record_block_io: bool = False) -> SimResult:
@@ -235,6 +237,7 @@ def run(scenario: Scenario | str, cfg: Config = DEFAULT, record_block_io: bool =
         s["vision_age"][k] = out.vision_age
         s["tracking"][k] = pkt.is_tracking
         s["faults"][k] = len(dec.faults)
+        s["gate_status"][k] = _GATE_CODE[dec.status]
         s["pix_ex"][k], s["pix_ey"][k] = out.pixel_error
         s["abort_bits"][k] = out.abort_cause_bits
         if out.landing_ready and "landing_ready" not in events:
@@ -263,3 +266,30 @@ def _record_block_io(io, rec) -> None:
 
 
 __all__ = ["SCENARIOS", "Scenario", "SimResult", "Vehicle", "project_pad", "run"]
+
+
+# ------------------------------------------------------------------ pad sweep
+PAD_GRID_X = (-1.1, 1.1, 12)
+PAD_GRID_Y = (-0.95, 0.95, 8)
+
+
+def pad_grid(nx: int = PAD_GRID_X[2], ny: int = PAD_GRID_Y[2]) -> list[tuple[float, float]]:
+    """Pad positions on a regular grid over the flight area (12 x 8 by default)."""
+    xs = np.round(np.linspace(PAD_GRID_X[0], PAD_GRID_X[1], nx), 3)
+    ys = np.round(np.linspace(PAD_GRID_Y[0], PAD_GRID_Y[1], ny), 3)
+    return [(float(x), float(y)) for x in xs for y in ys]
+
+
+def run_pad(pad_xy: tuple[float, float], duration: float = 120.0, mode=None, cfg: Config = DEFAULT) -> dict:
+    """The nominal Phase 10 mission with the pad at ``pad_xy``; a JSON-able summary."""
+    base = SCENARIOS["nominal-autoland"]
+    sc = dataclasses.replace(base, name=f"pad({pad_xy[0]:g},{pad_xy[1]:g})", pad_xy=tuple(pad_xy), duration=duration,
+                             **({"mode": mode} if mode is not None else {}))
+    r = run(sc, cfg)
+    s = r.signals
+    gate = r.runtime.gate
+    return {"pad": list(pad_xy), "landed": "landed" in r.events, "landed_s": r.events.get("landed"),
+            "confirmed": bool(np.nanmax(s["confirmed"]) > 0), "max_stage": int(np.nanmax(s["stage"])),
+            "gate_faults": dict(gate.faults), "centring_refusals": getattr(gate, "centring_refusals", 0),
+            "escalations": getattr(gate, "escalations", 0),
+            "touchdown_error_m": round(float(np.hypot(*(r.vehicle.pos[:2] - np.array(pad_xy)))), 4)}

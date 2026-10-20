@@ -102,3 +102,22 @@ def test_dry_run_sends_nothing():
 @pytest.mark.parametrize("name", list(sim.SCENARIOS))
 def test_no_scenario_emits_gate_faults(name):
     assert run(name).signals["faults"].sum() == 0
+
+
+# A subset of the 12x8 pad grid swept by tools/pad_sweep.py (full sweep: 94/96
+# land, 0 gate faults).  It covers pads confirmed while the vehicle is still
+# far short of its waypoint, which is where a centring-entry check anchored on
+# the wrong pose stalls the mission.
+PAD_SUBSET = [(0.1, -0.95), (-0.3, 0.407), (0.9, 0.95), (-1.1, 0.95), (1.1, -0.95), (0.5, -0.136), (-0.7, -0.679)]
+
+
+@pytest.mark.parametrize("pad", PAD_SUBSET, ids=[f"{x:+.2f},{y:+.3f}" for x, y in PAD_SUBSET])
+def test_autoland_lands_across_pad_positions(pad):
+    r = sim.run_pad(pad)
+    assert r["gate_faults"] == {} and r["escalations"] == 0
+    assert r["landed"] and r["touchdown_error_m"] < 0.05
+
+
+def test_pad_grid_matches_sweep_definition():
+    pads = sim.pad_grid()
+    assert len(pads) == 96 and pads[0] == (-1.1, -0.95) and pads[-1] == (1.1, 0.95)
