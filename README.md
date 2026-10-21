@@ -51,6 +51,15 @@ qautoland sim                     # closed-loop scenarios against a stand-in veh
 qautoland serve --mode dry-run    # real sockets, sends nothing
 ```
 
+![Top view of a closed-loop software-in-the-loop run of the nominal mission against a stand-in vehicle: grid search, the pad seen and confirmed, centring and descent, touchdown 23 mm from the pad at 34.9 s.](docs/figures/landing_xy.png)
+
+![Two 12 by 8 heatmaps of pad positions: with this port 94 of 96 pads land with zero output-gate faults and 12 to 23 mm touchdown error, the other two are never confirmed by the model's search; at the earlier commit eec0a74, 56 of 96 land and 38 stall on a refused centring entry.](docs/figures/pad_sweep.png)
+
+*Both figures: `python tools/make_figures.py` from real runs of the port
+([landing data](docs/figures/data/visuals.json),
+[sweep data](docs/figures/data/pad_sweep.json) from `tools/pad_sweep.py`).
+The stand-in vehicle and camera are not a flight model.*
+
 Details, evidence, figures and findings about the saved models:
 [docs/PYTHON_PORT.md](docs/PYTHON_PORT.md). The port adds files under `src/`,
 `tests/`, `tools/`, `docs/` and `.github/`, plus `pyproject.toml`; of the

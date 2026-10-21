@@ -27,6 +27,49 @@ flowchart LR
     CC -- "TCP 18001<br/>&lt;d, 8 B echo" --> SS
 ```
 
+*Endpoints, rates and payload sizes as read from the two `.mdl` files by
+`tools/mdl_spec.py`: digests
+[Mission_Server_QDrone_YOLO_Autonomous_Land.md](spec/Mission_Server_QDrone_YOLO_Autonomous_Land.md)
+and [QDrone_YOLO_Direct_Stream_Commander.md](spec/QDrone_YOLO_Direct_Stream_Commander.md),
+kept fresh by `mdl_spec.py --check` in CI.*
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant CMD as Commander (QDrone)
+    participant PUB as yolo_pad_direct_stream_fresh.py
+    participant MS as Mission server (1 kHz)
+    Note over CMD,PUB: every 0.2 s
+    CMD->>PUB: TCP 18910: 640x480 uint8 frame, column-major, 307200 B, no header
+    PUB->>PUB: CameraFreshness: frozen frames are withheld
+    PUB->>MS: TCP 18901: <6d [detected, cx, cy, conf, frame, timestamp], 48 B
+    Note over MS,CMD: every 1 ms tick
+    MS->>MS: drain 18901, newest complete record only, VisionGuard
+    MS->>CMD: TCP 18001: <14d [triggers 4, isTracking, measured 4, desired 4, timestamp], 112 B
+    CMD->>MS: TCP 18001: <d echo of element 14, 8 B (loopback time)
+```
+
+*One cycle of the three links, in the order the Python port exercises them in
+`tests/test_vision_interop.py` (the real publisher as a subprocess, fed
+synthetic frames over TCP 18910) and `qautoland loopback` /
+`tests/test_sockets.py` (mission server to a fake Commander and back).*
+
+```mermaid
+flowchart LR
+    subgraph CMD14["&lt;14d command, 112 B, TCP 18001"]
+        direction LR
+        c1["1 arm"] --- c2["2 takeoff/land"] --- c3["3 e-stop"] --- c4["4 joystick issue"] --- c5["5 isTracking"] --- c6["6-9 measured x y z yaw"] --- c7["10-13 desired x y z yaw"] --- c8["14 timestamp"]
+    end
+    subgraph OBS6["&lt;6d observation, 48 B, TCP 18901"]
+        direction LR
+        o1["1 detected"] --- o2["2 centerX"] --- o3["3 centerY"] --- o4["4 confidence"] --- o5["5 frame"] --- o6["6 timestamp"]
+    end
+```
+
+*Field order of `protocol.COMMAND` and `protocol.VISION`, checked by
+`tests/test_protocol.py`, `tests/test_spec.py` (the model's root Mux) and
+`tests/test_vision_interop.py` (the publisher's own packets).*
+
 ## Links
 
 | Link | Transport | Server side | Client side | Payload | Rate | Evidence |
