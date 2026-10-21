@@ -2,7 +2,7 @@
 
 # Octave and spec checks: recorded output
 
-Run by [`tools/evidence.py`](../../tools/evidence.py) `checks` on Linux x86_64, GNU Octave, version 9.4.0, Python 3.12.15. The same commands run in CI (`.github/workflows/ci.yml`, Octave job, with the Ubuntu Octave package) on every push.
+Run by [`tools/evidence.py`](../../tools/evidence.py) `checks` on Linux x86_64, GNU Octave, version 9.4.0, Python 3.12.15. CI ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)) checks the same things on every push: the Octave job (Ubuntu Octave package) runs the original tests and the template check through [`tests/test_octave_live.py`](../../tests/test_octave_live.py) (`pytest -m octave`) and runs `make_fixtures.py --check` directly; `mdl_spec.py --check` runs in the lint job.
 
 ## Original MATLAB tests, unmodified, in Octave
 

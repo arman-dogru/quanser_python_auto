@@ -80,8 +80,10 @@ written into this file by `python tools/evidence.py interop`
 [interop.json](figures/data/interop.json); the same tables standalone in
 [evidence/interop.md](evidence/interop.md)). The Commander socket's
 drop-not-queue and no-torn-records behaviour is pinned by
-`tests/test_sockets.py`; the loopback run below shows it under load (records
-received complete, a dropped send counted, nothing queued).
+`tests/test_sockets.py`. The loopback run below shows the round trip at
+1 kHz: commands sent and records received complete, the fake Commander echoing
+the newest record's timestamp, and the loopback time the mission server
+computes from that echo.
 
 <!-- interop-capture:begin (tools/evidence.py interop) -->
 ### Interop capture: decoded packets
@@ -101,7 +103,7 @@ Captured by [`tools/evidence.py`](../tools/evidence.py) `interop` on Linux x86_6
 | 7 | frozen (repeat) | 307200 | 54 | 100 | 51 | 54, 100 | 0 |
 | 8 | frozen (repeat) | 307200 | 54 | 100 | 51 | 54, 100 | 0 |
 
-Wire byte 2 is image(2,1), not image(1,2): the frame goes out column-major, as the Commander's MATLAB (HxW) stream does, with no header.
+Wire byte 2 is image(2,1), not image(1,2): the stand-in sends each frame column-major, with no header. That this is the order the publisher expects is its decode line, `reshape((HEIGHT, WIDTH), order="F")` in [`python/yolo_pad_direct_stream.py`](../python/yolo_pad_direct_stream.py#L52-L57) (`receive_frame`, imported by the fresh publisher); the non-detection observations above cannot show orientation.
 
 8 frames sent, 5 observations received: one per fresh frame and one for the first copy of the frozen frame; its repeats are withheld. Publisher log: `CAMERA STALE: raw frame repeated 1 times; no detection sent`.
 
@@ -109,21 +111,21 @@ Each observation as received (48 bytes, `<6d`, grouped per double) and decoded:
 
 | # | 48 bytes (hex) | detected | centerX | centerY | confidence | frame | timestamp |
 |---|---|---|---|---|---|---|---|
-| 1 | `0000000000000000 0000000000000000 0000000000000000 0000000000000000 000000000000f03f 5c0cde1206b6da41` | 0 | 0 | 0 | 0 | 1 | 1792546891.470 |
-| 2 | `0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000040 4bb9e01206b6da41` | 0 | 0 | 0 | 0 | 2 | 1792546891.511 |
-| 3 | `0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000840 0d48e21206b6da41` | 0 | 0 | 0 | 0 | 3 | 1792546891.536 |
-| 4 | `0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000001040 0ae8e31206b6da41` | 0 | 0 | 0 | 0 | 4 | 1792546891.561 |
-| 5 | `0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000001440 f03ae51206b6da41` | 0 | 0 | 0 | 0 | 5 | 1792546891.582 |
+| 1 | `0000000000000000 0000000000000000 0000000000000000 0000000000000000 000000000000f03f 2cb3fc4e07b6da41` | 0 | 0 | 0 | 0 | 1 | 1792548155.948 |
+| 2 | `0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000040 59faff4e07b6da41` | 0 | 0 | 0 | 0 | 2 | 1792548156.000 |
+| 3 | `0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000840 a7c4014f07b6da41` | 0 | 0 | 0 | 0 | 3 | 1792548156.028 |
+| 4 | `0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000001040 08d1034f07b6da41` | 0 | 0 | 0 | 0 | 4 | 1792548156.060 |
+| 5 | `0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000001440 6929224f07b6da41` | 0 | 0 | 0 | 0 | 5 | 1792548156.534 |
 
 #### Mission server to Commander (TCP 18001) and the echo
 
-A `qautoland loopback`-style run on 127.0.0.1 (monitor mode, static pose, arm from 6 s, fake publisher at 5 Hz) for 8162 ticks: 1 commands sent, 8161 dropped, 1 complete 112-byte records received by the fake Commander (`io/loopback.py`), stopped: None.
+A `qautoland loopback`-style run on 127.0.0.1 (monitor mode, static pose, arm from 6 s, fake publisher at 5 Hz) for 8062 ticks: 8062 commands sent, 0 dropped, 8062 complete 112-byte records received by the fake Commander ([`io/loopback.py`](../src/qdrone_autoland/io/loopback.py)), of which it decoded and echoed 7286: like the Commander's "Receive most recent data", it decodes only the newest complete record of each read. Server stopped: no. The capture refuses to write if the fake Commander thread raised, fewer than 90 % of ticks were sent, no packet arrived, the echo matches no command sent, or the loopback time is not between 0 and 1 s.
 
-Last command, 112 bytes (`<14d`): `0000000000000000 0000000000000000 0000000000000000 0000000000000000 000000000000f03f 0000000000000000 cdccccccccccecbf 0000000000000000 0000000000000000 0000000000000000 0000000000000000 666666666666e63f 0000000000000000 7f9df51306b6da41`
+Last command, 112 bytes (`<14d`): `000000000000f03f 0000000000000000 0000000000000000 0000000000000000 000000000000f03f 0000000000000000 cdccccccccccecbf 0000000000000000 0000000000000000 0000000000000000 cdccccccccccecbf 666666666666e63f 0000000000000000 62a6375207b6da41`
 
 | element | field | value |
 |---|---|---|
-| 1 | arm | 0 |
+| 1 | arm | 1 |
 | 2 | takeoff/land | 0 |
 | 3 | e-stop | 0 |
 | 4 | joystick issue | 0 |
@@ -133,12 +135,12 @@ Last command, 112 bytes (`<14d`): `0000000000000000 0000000000000000 00000000000
 | 8 | measured z | 0 |
 | 9 | measured yaw | 0 |
 | 10 | desired x | 0 |
-| 11 | desired y | 0 |
+| 11 | desired y | -0.9 |
 | 12 | desired z | 0.7 |
 | 13 | desired yaw | 0 |
-| 14 | timestamp | 1792546895.837738 |
+| 14 | timestamp | 1792548168.869530 |
 
-Echo, 8 bytes (`<d`): `0000000000000000` = 0.000000, the last value the mission server decoded from the Commander side; it equals element 14 (timestamp) of an earlier command: False. Loopback time measured by the mission server on its last tick: 1792546903859.466 ms.
+Echo, 8 bytes (`<d`): `9295375207b6da41` = 1792548168.868504, the last value the mission server decoded from the Commander side; it equals element 14 (timestamp) of an earlier command: True. Loopback time measured by the mission server on its last tick: 1.026 ms (the echo is 1.026 ms older than the last command's timestamp).
 <!-- interop-capture:end -->
 
 ## Links
@@ -172,10 +174,18 @@ data type back-propagated (every signal resolves to `double`).
   isTracking, measured and desired pose.
 * Comm loss (after `t > 3`): stream loss when `state ~= 2 && error < 0`
   (0.1 s threshold); data loss when element 14 does not change for 0.5 s
-  (and is > 0). FLIGHT SAFETY stops the model after 1 s of comm loss while
-  armed; HIL watchdog 0.1 s.
-* FSM: comm, joystick or tracking issue -> Error. In AUTO_LAND (state 6) a
-  return of trigger 2 to 1 is an Error -> emergency stop.
+  (and is > 0) ([evidence](evidence/model_findings.md#comm-loss)).
+* FSM: comm, joystick or tracking issue -> Error -> state 7, EMERGENCY STOP
+  (left only once the net throttle is near zero, then DISABLE, which stops
+  the model). In AUTO_LAND (state 6) a return of trigger 2 to 1 is an Error
+  as well ([evidence](evidence/model_findings.md#commander-land): `chart_145` AUTOLAND case and
+  `chart_187` state 6 -> 7).
+* FLIGHT SAFETY (inside the stabilizer) has a 1 s comm-loss stop gated by
+  Arm, but in the saved Commander its `Communication Loss` input is wired to
+  a Constant 0, so it cannot fire; losing the mission server is handled by
+  the state machine above. Its model-stop input is held 0.1 s before the
+  model stops, and the HIL Watchdog has a 0.1 s timeout (its `active`
+  parameter is `off`; not run here) ([evidence](evidence/model_findings.md#flight-safety)).
 
 ## Python implementation
 

@@ -12,10 +12,11 @@ Usage::
     python tools/pad_sweep.py --rev eec0a74 --json docs/figures/data/pad_sweep_eec0a74.json
 
 ``--rev`` runs the same grid against an earlier commit, checked out into a
-temporary git worktree (it needs the full history: on a shallow clone, such as
-the default ``actions/checkout``, it stops with a message) (commits before ``sim.run_pad`` existed are driven
-through ``sim.run`` with the same scenario change). The figures use it to
-compare the final output gate with an earlier one.
+temporary git worktree. Commits from before ``sim.run_pad`` existed are driven
+through ``sim.run`` with the same scenario change. The figures use it to
+compare the final output gate with an earlier one. It needs the full git
+history: on a shallow clone, such as the default ``actions/checkout``, it
+stops with a message.
 """
 from __future__ import annotations
 

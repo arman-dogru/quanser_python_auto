@@ -28,6 +28,8 @@ jobs:
         run: python tools/mdl_spec.py --check
       - name: Model-finding evidence quotes current lines
         run: python tools/evidence.py findings --check
+      - name: Block-chain table matches the port (docs/evidence/block_chains.md)
+        run: python tools/evidence.py chains --check
       - name: Tests (committed Octave fixtures; live-Octave and vision tests skip)
         run: pytest -q -m "not vision"
       - name: Original vision unit tests

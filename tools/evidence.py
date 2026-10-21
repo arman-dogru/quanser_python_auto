@@ -7,6 +7,10 @@ Subcommands (each writes a generated Markdown file under ``docs/evidence/``;
   ``docs/PYTHON_PORT.md``, the exact lines of the ``.mdl`` files, the
   committed spec digest (``docs/spec``) and the chart code that show it, with
   line numbers and links. Deterministic, no tools needed.
+* ``chains``: the block chains ported from block parameters (convention
+  correction, conditioning, Threshold, home pose, joystick, comm-loss
+  display), run on the inputs of ``tests/test_blocks.py``; the table is what
+  the port outputs. Deterministic, no tools needed.
 * ``nan-hold``: the NaN-hold reproduction. The same input rows go through the
   Python grid manager and through Octave running the model's chart code
   (``tools/octave/parity_driver.m``); the table is the desired pose both
@@ -25,6 +29,7 @@ Subcommands (each writes a generated Markdown file under ``docs/evidence/``;
 Usage::
 
     python tools/evidence.py findings [--check]
+    python tools/evidence.py chains [--check]
     python tools/evidence.py nan-hold [--check]
     python tools/evidence.py checks
     python tools/evidence.py interop [--render]   # --render: rewrite the tables from interop.json
@@ -43,8 +48,11 @@ import struct
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
+
+import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -123,6 +131,44 @@ FINDINGS = [
      "`vision(6)` (count below).",
      [(f"{MS_CHARTS}/chart_65_YOLO_Confirmation_and_Hover_Hold.m", r"vision\(5\)~=lastFrame", 0, 1),
       (f"{MS_CHARTS}/chart_65_YOLO_Confirmation_and_Hover_Hold.m", r"confidence=vision\(4\)", 0, 0)]),
+    ("commander-land", "In AUTO_LAND, Takeoff/Land returning to 1 is an Error and an emergency stop",
+     "The Commander's state logic sets `Error = 1` in AUTOLAND (state 6) when trigger 2 is 1 again (\"user tries "
+     "to takeoff while landing\"), as it does for a communication, joystick or tracking issue; the transition "
+     "chart sends `Error` from state 6 to state 7, EMERGENCY STOP, which leaves only once the net throttle is "
+     "close to zero (then DISABLE, state 9, which stops the model). This is why the port never raises "
+     "Takeoff/Land during an applied LAND.",
+     [(f"{CMDR_CHARTS}/chart_145_STATE_MACHINE_LOGIC.m", r"case 6 % AUTOLAND STATE", 0, 10),
+      (f"{CMDR_CHARTS}/chart_145_STATE_MACHINE_LOGIC.m", r"case 7 % EMERGENCY LAND STATE", 0, 3),
+      (f"{CMDR_CHARTS}/chart_145_STATE_MACHINE_LOGIC.m", r"^    case 9", 0, 2),
+      (f"{CMDR_CHARTS}/chart_187_STATE_MACHINE_TRANSITION.m", r"case 6 % AUTO_LAND STATE", 0, 8),
+      (f"{CMDR_CHARTS}/chart_187_STATE_MACHINE_TRANSITION.m", r"case 7 % EMERGENCY STOP STATE", 0, 7)]),
+    ("flight-safety", "FLIGHT SAFETY: the 1 s comm-loss stop is wired to a constant 0; model stop 0.1 s; "
+     "HIL Watchdog 0.1 s",
+     "Inside `STABILIZER - QDRONE /FLIGHT SAFETY`, `Communication Loss` AND `Arm` (Logic block, default "
+     "operator) feeds a QUARC Threshold `Communication` (>= 0.5 for 1 s) whose output drives "
+     "`Stop with Message1` (\"Communication with Commander lost\"). In the saved Commander, the stabilizer's "
+     "`Communication Loss (0,1)` input is wired to a Constant 0, so this 1 s stop cannot fire; the Commander's "
+     "reaction to losing the mission server is its own state machine (comm issue -> Error -> EMERGENCY STOP, "
+     "[comm-loss](#comm-loss) and [above](#commander-land)). The stabilizer's `Stop Model (0,1)` input "
+     "(from the COMMANDER (ANGLE MODE) subsystem) goes through a Threshold held 0.1 s to `Stop with Message` "
+     "(\"Commander Terminated\"). The HIL Watchdog has `timeout` 0.1 s and drives `Stop with Message3`; its "
+     "`active` parameter is `off` (in QUARC blocks this is usually the \"active during normal simulation\" "
+     "option; its effect on the target was not run here).",
+     [(CMDR, r'Name="Communication" SID="11865"', 0, 20),
+      (CMDR, r'Name="Logical&#xA;Operator1" SID="11875"', 0, 8),
+      (CMDR, r'Name="Src">11864#out:1', 0, 1),
+      (CMDR, r'Name="Src">11862#out:1', 0, 1),
+      (CMDR, r'Name="Src">11870#out:1', 0, 1),
+      (CMDR, r'Communication with Commander lost', 0, 0),
+      (CMDR, r'Name="Communication Loss \(0,1\)" SID="11853"', 0, 5),
+      (CMDR, r'Name="STABILIZER - QDRONE " SID="11846"', 0, 0),
+      (CMDR, r'Name="Src">6636#out:1', 0, 1),
+      (CMDR, r'BlockType="Constant" Name="Constant" SID="6636"', 0, 6),
+      (CMDR, r'Name="Stop model" SID="11880"', 0, 20),
+      (CMDR, r'Name="Src">11863#out:1', 0, 1),
+      (CMDR, r'Name="Src">11880#out:1', 0, 9),
+      (CMDR, r'Name="HIL Watchdog" SID="11874"', 0, 19),
+      (CMDR, r'HIL Watchdog timer expired', 0, 0)]),
 ]
 
 
@@ -210,6 +256,119 @@ def nan_hold_md() -> str:
     return "".join(out)
 
 
+# ------------------------------------------------------------------ block chains
+def _v(x) -> str:
+    if isinstance(x, (tuple, list, np.ndarray)):
+        return "(" + ", ".join(_v(float(e)) for e in x) + ")"
+    x = float(x)
+    if math.isnan(x):
+        return "NaN"
+    r = round(x, 12)
+    return f"{r + 0.0:.6g}"
+
+
+CHAINS_MARK = ("<!-- block-chains:begin (tools/evidence.py chains) -->", "<!-- block-chains:end -->")
+
+
+def chains_md() -> str:
+    from qdrone_autoland.blocks import (
+        R_RSF_TO_MF,
+        HomePose,
+        Joystick,
+        JoystickSample,
+        MeasurementConditioning,
+        MissionCommIssue,
+        ThresholdTimer,
+        motive_to_rsf,
+    )
+    T = "../../tests/test_blocks.py"
+    B = "../../src/qdrone_autoland/blocks.py"
+    rows = []
+
+    test_lines = (ROOT / "tests" / "test_blocks.py").read_text().splitlines()
+
+    def row(chain, inp, out, test):
+        ln = next(i for i, x in enumerate(test_lines, 1) if x.startswith(f"def {test}("))
+        rows.append(f"| {chain} | {inp} | {out} | [`{test}`]({T}#L{ln}) |\n")
+
+    rsf, yaw = np.array([0.3, -0.4, 0.7]), np.array([0.0, 0.0, 0.25])
+    xyz, rot = motive_to_rsf(R_RSF_TO_MF @ rsf, R_RSF_TO_MF @ yaw)
+    row("Convention correction (Motive -> RSF), `motive_to_rsf`",
+        f"Motive xyz {_v(R_RSF_TO_MF @ rsf)}, rot {_v(R_RSF_TO_MF @ yaw)}",
+        f"RSF xyz {_v(xyz)}, rot {_v(rot)} (back to the RSF pose)", "test_convention_correction_position_and_yaw")
+    c = MeasurementConditioning()
+    for v, note, test in (([0.1, 0.2, 0.77, 0, 0, 3.1, 1], "", "test_conditioning_bias_saturation_unwrap"),
+                          ([5, -5, -1, 0, 0, -3.1, 1], " (next tick; yaw = -3.1 + 2 pi)",
+                           "test_conditioning_bias_saturation_unwrap"),
+                          ([0.1, 0.2, 0.77, 0, 0, math.nan, 1], " (next tick; NaN passes the unwrap)",
+                           "test_unwrap_passes_nan")):
+        o = c.step(v)
+        row("Measurement conditioning (bias -0.07 m on z, saturation [-2 -2 0]..[2 2 5], yaw unwrap)",
+            f"vehicle {_v(v)}", f"measured pose {_v(o.measured_pose)}, isTracking {_v(o.is_tracking)}{note}", test)
+    t = ThresholdTimer(0.5, 0.2)
+    seq = [(0.0, 1), (0.199, 1), (0.2, 1), (0.3, 0)]
+    row("QUARC Threshold (>= 0.5 held 0.2 s)", "; ".join(f"t={a:g} s x={b}" for a, b in seq),
+        "; ".join(str(int(t.step(a, b))) for a, b in seq), "test_threshold_timer")
+    h = HomePose()
+    at3 = out = None
+    for k in range(9000):
+        tt = k * 0.001
+        arm = 1.0 if 1.0 <= tt < 2.0 or tt >= 6.0 else 0.0
+        out = h.step(tt, (0.3, -0.9, 0.0, 0.1) if tt < 7.0 else (5, 5, 5, 5), arm)
+        if k == 3000:
+            at3 = out
+    row("Calculate Home Pose (one-shot 1 s on the arm edge, only after `Clock > 5`; z + 0.70)",
+        "pose (0.3, -0.9, 0, 0.1) until 7 s then (5, 5, 5, 5); arm 1-2 s and from 6 s",
+        f"at 3 s {_v(at3)} (edge before 5 s ignored); at 9 s {_v(out)} (captured 6-7 s, held)",
+        "test_home_pose_captures_on_arm_after_5s")
+
+    def joy(tt, estop=0.0, arm=1.0, rz=1.0):
+        b = [0.0] * 32
+        b[0], b[1] = estop, arm
+        return JoystickSample(new=float(int(tt * 100) % 2), buttons=tuple(b), x=-1.0, y=0, z=0, rx=0, ry=0, rz=rz)
+    j, tt = Joystick(), 0.0
+    for _ in range(20):
+        o = j.step(tt, joy(tt))
+        tt += 0.01
+    a = o.triggers
+    for _ in range(25):
+        o = j.step(tt, joy(tt, estop=1.0))
+        tt += 0.01
+    b_ = o.triggers
+    for _ in range(25):
+        o = j.step(tt, JoystickSample.disconnected())
+        tt += 0.01
+    row("JOYSTICK (FrSKY mapping, E-stop held 0.2 s, disconnect = all six axes -1 for 0.2 s)",
+        "arm pressed, takeoff stick up, 0.2 s; then E-stop pressed 0.25 s; then disconnected 0.25 s",
+        f"triggers [arm, takeoff, e-stop, issue]: {_v(a)}; {_v(b_)}; {_v(o.triggers)}",
+        "test_joystick_mapping_estop_and_disconnect")
+    j = Joystick()
+    outs = [j.step(k * 0.01, joy(k * 0.01, rz=-0.5 if k < 3 else -0.51)).triggers[1] for k in range(5)]
+    row("JOYSTICK takeoff axis (rz >= -0.5)", "rz -0.5, -0.5, -0.5, -0.51, -0.51 (10 ms apart)",
+        "takeoff " + ", ".join(_v(x) for x in outs) + " (first tick: outputs held until an edge on `new`)",
+        "test_takeoff_axis_threshold_is_minus_half")
+    m, tt, hist = MissionCommIssue(), 0.0, []
+    for k in range(3000):
+        state = 0.0 if 1500 <= k < 1800 or 2200 <= k < 2600 else 2.0
+        hist.append(m.step(tt, state, 0.0))
+        tt += 0.001
+    first = next(i for i, (iss, _) in enumerate(hist) if iss)
+    second = next(i for i in range(2200, 3000) if hist[i][0])
+    row("Comm-loss display (Detect Communication loss, 0.1 s Threshold, Triggered Subsystem x Product)",
+        "stream state 0 (lost) at 1.5-1.8 s and 2.2-2.6 s, else 2",
+        f"issue from {first / 1000:g} s, shown {_v(hist[first][1])} (first loss); issue from {second / 1000:g} s, "
+        f"shown {_v(hist[second][1])} (after the first recovery)",
+        "test_mission_comm_issue_shown_only_after_first_recovery")
+    return (HEADER.format(cmd="chains") + "# Block chains: inputs and the port's outputs\n\n"
+            "The chains the port builds from block parameters (no chart code to compare against), run by "
+            "[`tools/evidence.py`](../../tools/evidence.py) `chains` on the same inputs as "
+            f"[`tests/test_blocks.py`]({T}); implementation in [`blocks.py`]({B}). The test named in each row "
+            "asserts the output shown. These are not checked against Simulink; the block parameters they use "
+            "are in the [spec digest](../spec/Mission_Server_QDrone_YOLO_Autonomous_Land.md). "
+            "`--check` in CI keeps this file equal to what the port outputs.\n\n"
+            "| chain (model block) | input | port output | test |\n|---|---|---|---|\n" + "".join(rows))
+
+
 # ------------------------------------------------------------------ Octave checks
 def checks_md() -> tuple[str, dict]:
     def run(cmd, **kw):
@@ -232,16 +391,16 @@ def checks_md() -> tuple[str, dict]:
            "steps": []}
     out = [HEADER.format(cmd="checks"), "# Octave and spec checks: recorded output\n\n",
            f"Run by [`tools/evidence.py`](../../tools/evidence.py) `checks` on {rec['host']}, {octv}, "
-           f"Python {rec['python']}. The same commands run in CI (`.github/workflows/ci.yml`, Octave job, "
-           "with the Ubuntu Octave package) on every push.\n"]
+           f"Python {rec['python']}. CI ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)) checks the same "
+           "things on every push: the Octave job (Ubuntu Octave package) runs the original tests and the template "
+           "check through [`tests/test_octave_live.py`](../../tests/test_octave_live.py) (`pytest -m octave`) and "
+           "runs `make_fixtures.py --check` directly; `mdl_spec.py --check` runs in the lint job.\n"]
     for title, script, cmd, keep in steps:
         rc, lines, secs = run(cmd, timeout=1800)
         kept = [ln.replace(str(ROOT), ".") for ln in lines if keep(ln)]
-        rec["steps"].append({"title": title, "command": " ".join(Path(c).name if i == 0 else c
-                                                                 for i, c in enumerate(cmd)),
+        disp = " ".join(c.replace(str(ROOT), ".") for c in cmd[1:]).replace(sys.executable, "python")
+        rec["steps"].append({"title": title, "command": f"{Path(cmd[0]).name} {disp}",
                              "returncode": rc, "seconds": secs, "output": kept})
-        disp = " ".join(c if "addpath" not in c else c.replace(str(ROOT), ".") for c in cmd[1:])
-        disp = disp.replace(sys.executable, "python")
         out.append(f"\n## {title}\n\nScript: [`{script}`](../../{script}). Command: "
                    f"`{Path(cmd[0]).name} {disp}`; exit code {rc}.\n\n```text\n" + "\n".join(kept) + "\n```\n")
     return "".join(out), rec
@@ -346,35 +505,50 @@ def capture_loopback() -> dict:
     from qdrone_autoland.protocol import COMMAND, LOOPBACK
     from qdrone_autoland.safety import Mode
     raw_cmd: list[bytes] = []
+    orig_packet = lb_mod.CommandPacket
+    thread_errors: list[str] = []
 
-    class _Recording(lb_mod.CommandPacket):     # keep the raw 112 bytes the fake Commander decodes
+    class _Recording(orig_packet):              # keep the raw 112 bytes the fake Commander decodes
         @classmethod
         def unpack(cls, data):
             raw_cmd.append(bytes(data))
-            return lb_mod.CommandPacket.unpack(data)
-    lb_mod.CommandPacket = _Recording
-    pub = FakePublisher(0)
-    cmdsrv = CommanderServer(port=0)
-    fake = FakeCommander(cmdsrv.port)
-    fake.start()
-    rsf = np.array([0.0, -0.9, 0.0 + DEFAULT.model.rigid_body_height_offset])
-    pose = StaticPose(OptiTrackSample(tuple(R_RSF_TO_MF @ rsf), (0.0, 0.0, 0.0), 1.0))
+            return orig_packet.unpack(data)     # the saved original, not the patched module name
 
-    def joy(t):
-        b = [0.0] * 32
-        b[1] = 1.0 if t > 6 else 0.0
-        return JoystickSample(buttons=tuple(b), x=-1.0, y=0.0, z=0.0, rx=0.0, ry=0.0, rz=-1.0)
-    server = MissionServer(DEFAULT, Mode.MONITOR, VisionClient(port=pub.port), cmdsrv, pose, ScriptedJoystick(joy))
-    frame, next_pub, t_end = 0, 0.0, time.monotonic() + 8.0
-    while time.monotonic() < t_end:
-        server.run(duration=server.k * DEFAULT.model.step_size + 0.05)
-        if time.monotonic() >= next_pub:
-            frame += 1
-            pub.publish(1, 300.0, 200.0, 0.9, frame, time.time())
-            next_pub = time.monotonic() + 0.2
-    fake.stop()
-    lb_mod.CommandPacket = _Recording.__mro__[1]
+    prev_hook = threading.excepthook
+
+    def hook(a):                                 # an exception in the fake Commander must fail the capture
+        thread_errors.append(f"{a.exc_type.__name__}: {a.exc_value}")
+        prev_hook(a)
+    lb_mod.CommandPacket = _Recording
+    threading.excepthook = hook
+    try:
+        pub = FakePublisher(0)
+        cmdsrv = CommanderServer(port=0)
+        fake = FakeCommander(cmdsrv.port)
+        fake.start()
+        rsf = np.array([0.0, -0.9, 0.0 + DEFAULT.model.rigid_body_height_offset])
+        pose = StaticPose(OptiTrackSample(tuple(R_RSF_TO_MF @ rsf), (0.0, 0.0, 0.0), 1.0))
+
+        def joy(t):
+            b = [0.0] * 32
+            b[1] = 1.0 if t > 6 else 0.0
+            return JoystickSample(buttons=tuple(b), x=-1.0, y=0.0, z=0.0, rx=0.0, ry=0.0, rz=-1.0)
+        server = MissionServer(DEFAULT, Mode.MONITOR, VisionClient(port=pub.port), cmdsrv, pose,
+                               ScriptedJoystick(joy))
+        frame, next_pub, t_end = 0, 0.0, time.monotonic() + 8.0
+        while time.monotonic() < t_end:
+            server.run(duration=server.k * DEFAULT.model.step_size + 0.05)
+            if time.monotonic() >= next_pub:
+                frame += 1
+                pub.publish(1, 300.0, 200.0, 0.9, frame, time.time())
+                next_pub = time.monotonic() + 0.2
+        fake.stop()
+    finally:
+        lb_mod.CommandPacket = orig_packet
+        threading.excepthook = prev_hook
     st = server.stats
+    if not raw_cmd:
+        raise SystemExit("interop capture failed: the fake Commander decoded no command")
     cmd = raw_cmd[-1]
     last = COMMAND.unpack(cmd)
     echoed = cmdsrv.loopback_timestamp          # what the mission server decoded from the 8-byte echo
@@ -382,13 +556,29 @@ def capture_loopback() -> dict:
     lb = server.last.outputs.loopback_time if server.last is not None else math.nan
     server.close()
     pub.close()
+    matches = any(COMMAND.unpack(c)[13] == echoed for c in raw_cmd)
+    problems = []
+    if thread_errors:
+        problems.append("fake Commander thread raised " + "; ".join(thread_errors))
+    if st.ticks == 0 or st.sent < 0.9 * st.ticks:
+        problems.append(f"only {st.sent} of {st.ticks} commands sent")
+    if not fake.packets:
+        problems.append("no command packet reached the fake Commander")
+    if not matches:
+        problems.append(f"echo {echoed!r} is not the timestamp of any command sent")
+    if not (math.isfinite(lb) and 0.0 <= lb <= 1.0):
+        problems.append(f"implausible loopback time {lb!r} s")
+    if st.stopped_reason is not None:
+        problems.append(f"server stopped: {st.stopped_reason}")
+    if problems:
+        raise SystemExit("interop capture rejected, nothing written:\n  " + "\n  ".join(problems))
     names = ["arm", "takeoff/land", "e-stop", "joystick issue", "isTracking", "measured x", "measured y",
              "measured z", "measured yaw", "desired x", "desired y", "desired z", "desired yaw", "timestamp"]
     return {"ticks": st.ticks, "sent": st.sent, "send_dropped": st.send_dropped,
             "commander_records": fake.records, "commander_packets": len(fake.packets),
             "command_hex": cmd.hex(), "command_fields": dict(zip(names, last, strict=True)),
             "echo_hex": echo.hex(), "echo_value": struct.unpack("<d", echo)[0],
-            "echo_matches_an_earlier_command": any(COMMAND.unpack(c)[13] == echoed for c in raw_cmd),
+            "echo_matches_an_earlier_command": matches,
             "loopback_ms": round(lb * 1e3, 3) if math.isfinite(lb) else None, "stopped": st.stopped_reason,
             "note": "command = the raw bytes of the last record the fake Commander decoded; echo = the last "
                     "loopback value the mission server decoded, re-encoded as the 8 bytes it arrived as"}
@@ -414,8 +604,11 @@ def interop_md(d: dict, up: str = "../../", data: str = "../figures/data/", leve
         n = sum(1 for r in v["observations"] if r["after_sent"] == f["index"])
         out.append(f"| {f['index']} | {f['kind']} | {f['bytes']} | {f['img11']} | {f['img21']} | {f['img12']} | "
                    f"{f['wire1']}, {f['wire2']} | {n} |\n")
-    out.append("\nWire byte 2 is image(2,1), not image(1,2): the frame goes out column-major, as the Commander's "
-               "MATLAB (HxW) stream does, with no header.\n")
+    out.append("\nWire byte 2 is image(2,1), not image(1,2): the stand-in sends each frame column-major, with no "
+               "header. That this is the order the publisher expects is its decode line, `reshape((HEIGHT, WIDTH), "
+               f"order=\"F\")` in [`python/yolo_pad_direct_stream.py`]({up}python/yolo_pad_direct_stream.py#L52-L57) "
+               "(`receive_frame`, imported by the fresh publisher); the non-detection observations above cannot "
+               "show orientation.\n")
     out.append(f"\n{len(v['frames_sent'])} frames sent, {len(v['observations'])} observations received: one per "
                "fresh frame and one for the first copy of the frozen frame; its repeats are withheld. "
                "Publisher log: " + "; ".join(f"`{s}`" for s in v["publisher_stale_lines"]) + ".\n\n"
@@ -430,7 +623,12 @@ def interop_md(d: dict, up: str = "../../", data: str = "../figures/data/", leve
                "A `qautoland loopback`-style run on 127.0.0.1 (monitor mode, static pose, arm from 6 s, fake "
                f"publisher at 5 Hz) for {lbk['ticks']} ticks: {lbk['sent']} commands sent, {lbk['send_dropped']} "
                f"dropped, {lbk['commander_records']} complete 112-byte records received by the fake Commander "
-               f"(`io/loopback.py`), stopped: {lbk['stopped']}.\n\n"
+               f"([`io/loopback.py`]({up}src/qdrone_autoland/io/loopback.py)), of which it decoded and echoed "
+               f"{lbk['commander_packets']}: like the Commander's \"Receive most recent data\", it decodes only the "
+               "newest complete record of each read. Server stopped: "
+               f"{'no' if lbk['stopped'] is None else lbk['stopped']}. The capture refuses to write if the fake "
+               "Commander thread raised, fewer than 90 % of ticks were sent, no packet arrived, the echo matches no "
+               "command sent, or the loopback time is not between 0 and 1 s.\n\n"
                f"Last command, 112 bytes (`<14d`): `{_hexgroups(lbk['command_hex'])}`\n\n"
                "| element | field | value |\n|---|---|---|\n")
     for i, (k, val) in enumerate(lbk["command_fields"].items(), 1):
@@ -438,20 +636,34 @@ def interop_md(d: dict, up: str = "../../", data: str = "../figures/data/", leve
     out.append(f"\nEcho, 8 bytes (`<d`): `{lbk['echo_hex']}` = {lbk['echo_value']:.6f}, the last value the mission "
                "server decoded from the Commander side; it equals element 14 (timestamp) of an earlier command: "
                f"{lbk['echo_matches_an_earlier_command']}. Loopback time measured by the mission server on its last "
-               f"tick: {lbk['loopback_ms']} ms.\n")
+               f"tick: {lbk['loopback_ms']} ms (the echo is "
+               f"{(lbk['command_fields']['timestamp'] - lbk['echo_value']) * 1e3:.3f} ms older than the last "
+               "command's timestamp).\n")
     return "".join(out)
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("what", choices=["findings", "nan-hold", "checks", "interop"])
+    ap.add_argument("what", choices=["findings", "chains", "nan-hold", "checks", "interop"])
     ap.add_argument("--check", action="store_true", help="fail if the committed file is not what this run writes")
     ap.add_argument("--render", action="store_true", help="interop: re-render from the committed interop.json")
     args = ap.parse_args(argv)
     EVID.mkdir(parents=True, exist_ok=True)
-    if args.what in ("findings", "nan-hold"):
-        path = EVID / ("model_findings.md" if args.what == "findings" else "nan_hold.md")
-        text = findings_md() if args.what == "findings" else nan_hold_md()
+    if args.what in ("findings", "chains", "nan-hold"):
+        names = {"findings": "model_findings.md", "chains": "block_chains.md", "nan-hold": "nan_hold.md"}
+        path = EVID / names[args.what]
+        text = {"findings": findings_md, "chains": chains_md, "nan-hold": nan_hold_md}[args.what]()
+        if args.what == "chains":       # the table is also inlined in PYTHON_PORT.md between markers
+            pp = ROOT / "docs" / "PYTHON_PORT.md"
+            b, e = CHAINS_MARK
+            cur = pp.read_text()
+            table = text[text.index("| chain (model block)"):].replace("../../", "../").replace("(../spec/", "(spec/")
+            new = cur.split(b)[0] + b + "\n" + table + e + cur.split(e)[1]
+            if args.check and new != cur:
+                print("docs/PYTHON_PORT.md block-chain table is stale: run python tools/evidence.py chains")
+                return 1
+            if not args.check:
+                pp.write_text(new)
         if args.check:
             def body(t):   # the measured max-error line is printed, not compared (it names the Octave build)
                 return [ln for ln in t.splitlines() if not ln.startswith("Max |Octave")]

@@ -314,6 +314,260 @@ Occurrences of `vision(6)` per mission-server chart:
 | [`chart_82_Landing_Readiness_Gate.m`](../../docs/spec/Mission_Server_QDrone_YOLO_Autonomous_Land/charts/chart_82_Landing_Readiness_Gate.m) | 0 |
 | [`chart_99_Abort_Diagnostic.m`](../../docs/spec/Mission_Server_QDrone_YOLO_Autonomous_Land/charts/chart_99_Abort_Diagnostic.m) | 0 |
 
+<a id="commander-land"></a>
+## In AUTO_LAND, Takeoff/Land returning to 1 is an Error and an emergency stop
+
+The Commander's state logic sets `Error = 1` in AUTOLAND (state 6) when trigger 2 is 1 again ("user tries to takeoff while landing"), as it does for a communication, joystick or tracking issue; the transition chart sends `Error` from state 6 to state 7, EMERGENCY STOP, which leaves only once the net throttle is close to zero (then DISABLE, state 9, which stops the model). This is why the port never raises Takeoff/Land during an applied LAND.
+
+[`docs/spec/QDrone_YOLO_Direct_Stream_Commander/charts/chart_145_STATE_MACHINE_LOGIC.m` L137–L147](../../docs/spec/QDrone_YOLO_Direct_Stream_Commander/charts/chart_145_STATE_MACHINE_LOGIC.m#L137-L147)
+
+```text
+   137      case 6 % AUTOLAND STATE
+   138          if (Communication_Issue)||...  % Communication issue
+   139             (joystick_issue)||...       % joystick issue
+   140             (Tracking_Issue)||...       % optitrack issue
+   141             (sensor_failed)||...        % if sensor (IMU) failure is detected on drone stabilizer
+   142             (flying_too_high)||...      % flying above safety margin (w.r.t optitrack)    
+   143             (~trigger_1)||...           % user disarms
+   144             (trigger_2)                 % user tries to takeoff while landing
+   145             
+   146             
+   147             %----------------------------------------%
+```
+
+[`docs/spec/QDrone_YOLO_Direct_Stream_Commander/charts/chart_145_STATE_MACHINE_LOGIC.m` L153–L156](../../docs/spec/QDrone_YOLO_Direct_Stream_Commander/charts/chart_145_STATE_MACHINE_LOGIC.m#L153-L156)
+
+```text
+   153      case 7 % EMERGENCY LAND STATE
+   154          if net_throttle_close_to_zero 
+   155              pt_EMERGENCY_STOP_TO_DISABLE = true;
+   156          end
+```
+
+[`docs/spec/QDrone_YOLO_Direct_Stream_Commander/charts/chart_145_STATE_MACHINE_LOGIC.m` L161–L163](../../docs/spec/QDrone_YOLO_Direct_Stream_Commander/charts/chart_145_STATE_MACHINE_LOGIC.m#L161-L163)
+
+```text
+   161      case 9
+   162          % Stop the model.
+   163          stop_model = 1;
+```
+
+[`docs/spec/QDrone_YOLO_Direct_Stream_Commander/charts/chart_187_STATE_MACHINE_TRANSITION.m` L91–L99](../../docs/spec/QDrone_YOLO_Direct_Stream_Commander/charts/chart_187_STATE_MACHINE_TRANSITION.m#L91-L99)
+
+```text
+    91      case 6 % AUTO_LAND STATE
+    92          if E_Abort
+    93              Next_state = 8; % GOTO EMERGENCY ABORT STATE
+    94          elseif Error
+    95              Next_state = 7; % GOTO EMERGENCY STOP STATE
+    96          elseif pt_AUTOLAND_TO_DISABLE
+    97              Next_state = 9; % GOTO DISABLE STATE
+    98          else
+    99              Next_state = 6; % STAY IN AUTO_LAND STATE
+```
+
+[`docs/spec/QDrone_YOLO_Direct_Stream_Commander/charts/chart_187_STATE_MACHINE_TRANSITION.m` L102–L109](../../docs/spec/QDrone_YOLO_Direct_Stream_Commander/charts/chart_187_STATE_MACHINE_TRANSITION.m#L102-L109)
+
+```text
+   102      case 7 % EMERGENCY STOP STATE
+   103          if E_Abort
+   104              Next_state = 8; % GOTO EMERGENCY ABORT STATE
+   105          elseif pt_EMERGENCY_STOP_TO_DISABLE
+   106              Next_state = 9; % GOTO DISABLE STATE
+   107          else
+   108              Next_state = 7; % STAY IN EMERGENCY STOP STATE
+   109          end
+```
+
+
+<a id="flight-safety"></a>
+## FLIGHT SAFETY: the 1 s comm-loss stop is wired to a constant 0; model stop 0.1 s; HIL Watchdog 0.1 s
+
+Inside `STABILIZER - QDRONE /FLIGHT SAFETY`, `Communication Loss` AND `Arm` (Logic block, default operator) feeds a QUARC Threshold `Communication` (>= 0.5 for 1 s) whose output drives `Stop with Message1` ("Communication with Commander lost"). In the saved Commander, the stabilizer's `Communication Loss (0,1)` input is wired to a Constant 0, so this 1 s stop cannot fire; the Commander's reaction to losing the mission server is its own state machine (comm issue -> Error -> EMERGENCY STOP, [comm-loss](#comm-loss) and [above](#commander-land)). The stabilizer's `Stop Model (0,1)` input (from the COMMANDER (ANGLE MODE) subsystem) goes through a Threshold held 0.1 s to `Stop with Message` ("Commander Terminated"). The HIL Watchdog has `timeout` 0.1 s and drives `Stop with Message3`; its `active` parameter is `off` (in QUARC blocks this is usually the "active during normal simulation" option; its effect on the target was not run here).
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L8591–L8611](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L8591-L8611)
+
+```text
+  8591    <Block BlockType="Reference" Name="Communication" SID="11865">
+  8592      <P Name="Ports">[1, 2]</P>
+  8593      <P Name="Position">[200, 264, 310, 306]</P>
+  8594      <P Name="ZOrder">912</P>
+  8595      <P Name="LibraryVersion">1.2193</P>
+  8596      <P Name="FontName">Arial</P>
+  8597      <P Name="FontSize">8</P>
+  8598      <P Name="SourceBlock">quarc_library/Discontinuities/Threshold</P>
+  8599      <P Name="SourceType">Threshold</P>
+  8600      <P Name="SourceProductName">The database C:\Users\user\AppData\Roaming\MathWorks\MATLAB\R2017a\slblocks_master.db is locked, or a table in the database is l ...
+  8601      <InstanceData>
+  8602        <P Name="RTWMemSecFuncInitTerm">Inherit from model</P>
+  8603        <P Name="RTWMemSecFuncExecute">Inherit from model</P>
+  8604        <P Name="RTWMemSecDataConstants">Inherit from model</P>
+  8605        <P Name="RTWMemSecDataInternal">Inherit from model</P>
+  8606        <P Name="RTWMemSecDataParameters">Inherit from model</P>
+  8607        <P Name="ContentPreviewEnabled">off</P>
+  8608        <P Name="operator">&gt;=</P>
+  8609        <P Name="param_src">Specify via dialog</P>
+  8610        <P Name="threshold">0.5</P>
+  8611        <P Name="duration">1</P>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L8699–L8707](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L8699-L8707)
+
+```text
+  8699    <Block BlockType="Logic" Name="Logical&#xA;Operator1" SID="11875">
+  8700      <P Name="Ports">[2, 1]</P>
+  8701      <P Name="Position">[70, 266, 100, 304]</P>
+  8702      <P Name="ZOrder">913</P>
+  8703      <P Name="ShowName">off</P>
+  8704      <P Name="FontName">Arial</P>
+  8705      <P Name="FontSize">8</P>
+  8706      <P Name="AllPortsSameDT">off</P>
+  8707      <P Name="OutDataTypeStr">boolean</P>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L8986–L8987](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L8986-L8987)
+
+```text
+  8986      <P Name="Src">11864#out:1</P>
+  8987      <P Name="Dst">11875#in:1</P>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L8962–L8963](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L8962-L8963)
+
+```text
+  8962      <P Name="Src">11862#out:1</P>
+  8963      <P Name="Dst">11875#in:2</P>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L8981–L8982](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L8981-L8982)
+
+```text
+  8981      <P Name="Src">11870#out:1</P>
+  8982      <P Name="Dst">11865#in:1</P>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L8822](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L8822)
+
+```text
+  8822        <P Name="message">QDrone Stabilizer: Communication with Commander lost</P>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L7553–L7558](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L7553-L7558)
+
+```text
+  7553    <Block BlockType="Inport" Name="Communication Loss (0,1)" SID="11853">
+  7554      <P Name="Position">[-450, 965, -430, 975]</P>
+  7555      <P Name="ZOrder">933</P>
+  7556      <P Name="FontName">Arial</P>
+  7557      <P Name="FontSize">8</P>
+  7558      <P Name="Port">6</P>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L22413](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L22413)
+
+```text
+ 22413    <Block BlockType="SubSystem" Name="STABILIZER - QDRONE " SID="11846">
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L22464–L22465](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L22464-L22465)
+
+```text
+ 22464      <P Name="Src">6636#out:1</P>
+ 22465      <P Name="Dst">11846#in:6</P>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L22237–L22243](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L22237-L22243)
+
+```text
+ 22237    <Block BlockType="Constant" Name="Constant" SID="6636">
+ 22238      <P Name="Position">[-585, 937, -570, 953]</P>
+ 22239      <P Name="ZOrder">973</P>
+ 22240      <P Name="ShowName">off</P>
+ 22241      <P Name="FontName">Arial</P>
+ 22242      <P Name="FontSize">8</P>
+ 22243      <P Name="Value">0</P>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L8756–L8776](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L8756-L8776)
+
+```text
+  8756    <Block BlockType="Reference" Name="Stop model" SID="11880">
+  8757      <P Name="Ports">[1, 2]</P>
+  8758      <P Name="Position">[195, 174, 315, 216]</P>
+  8759      <P Name="ZOrder">907</P>
+  8760      <P Name="LibraryVersion">1.2193</P>
+  8761      <P Name="FontName">Arial</P>
+  8762      <P Name="FontSize">8</P>
+  8763      <P Name="SourceBlock">quarc_library/Discontinuities/Threshold</P>
+  8764      <P Name="SourceType">Threshold</P>
+  8765      <P Name="SourceProductName">The database C:\Users\user\AppData\Roaming\MathWorks\MATLAB\R2017a\slblocks_master.db is locked, or a table in the database is l ...
+  8766      <InstanceData>
+  8767        <P Name="RTWMemSecFuncInitTerm">Inherit from model</P>
+  8768        <P Name="RTWMemSecFuncExecute">Inherit from model</P>
+  8769        <P Name="RTWMemSecDataConstants">Inherit from model</P>
+  8770        <P Name="RTWMemSecDataInternal">Inherit from model</P>
+  8771        <P Name="RTWMemSecDataParameters">Inherit from model</P>
+  8772        <P Name="ContentPreviewEnabled">off</P>
+  8773        <P Name="operator">&gt;=</P>
+  8774        <P Name="param_src">Specify via dialog</P>
+  8775        <P Name="threshold">0.5</P>
+  8776        <P Name="duration">0.1</P>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L8942–L8943](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L8942-L8943)
+
+```text
+  8942      <P Name="Src">11863#out:1</P>
+  8943      <P Name="Dst">11880#in:1</P>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L8928–L8937](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L8928-L8937)
+
+```text
+  8928      <P Name="Src">11880#out:1</P>
+  8929      <P Name="Points">[65, 0]</P>
+  8930      <Branch>
+  8931        <P Name="ZOrder">14</P>
+  8932        <P Name="Dst">11871#in:1</P>
+  8933      </Branch>
+  8934      <Branch>
+  8935        <P Name="ZOrder">15</P>
+  8936        <P Name="Points">[0, 30]</P>
+  8937        <P Name="Dst">11881#in:1</P>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L8678–L8697](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L8678-L8697)
+
+```text
+  8678    <Block BlockType="Reference" Name="HIL Watchdog" SID="11874">
+  8679      <P Name="Ports">[0, 1]</P>
+  8680      <P Name="Position">[210, 349, 295, 381]</P>
+  8681      <P Name="ZOrder">943</P>
+  8682      <P Name="AttributesFormatString">(%&lt;object_name&gt;)</P>
+  8683      <P Name="LibraryVersion">1.2193</P>
+  8684      <P Name="UserDataPersistent">on</P>
+  8685      <P Name="UserData" Ref="bdmxdata:UserData_11874"/>
+  8686      <P Name="FontName">Arial</P>
+  8687      <P Name="FontSize">8</P>
+  8688      <P Name="SourceBlock">quarc_library/Data Acquisition/Generic/Watchdog/HIL Watchdog</P>
+  8689      <P Name="SourceType">HIL Watchdog</P>
+  8690      <P Name="SourceProductName">QUARC Targets</P>
+  8691      <InstanceData>
+  8692        <P Name="MultithreadedSim">auto</P>
+  8693        <P Name="object_name">HIL-1</P>
+  8694        <P Name="timeout">0.1</P>
+  8695        <P Name="sample_time">qc_get_step_size</P>
+  8696        <P Name="active">off</P>
+  8697      </InstanceData>
+```
+
+[`simulink/QDrone_YOLO_Direct_Stream_Commander.mdl` L8845](../../simulink/QDrone_YOLO_Direct_Stream_Commander.mdl#L8845)
+
+```text
+  8845        <P Name="message">QDrone Stabilizer: HIL Watchdog timer expired</P>
+```
+
+
 <a id="nan-hold"></a>
 ## NaN hold pose
 

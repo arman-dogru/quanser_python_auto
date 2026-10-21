@@ -39,7 +39,7 @@ the full runtime. Source: [`tools/make_figures.py`](../tools/make_figures.py)
 | VisionGuard | non-finite, `detected` not 0/1, negative or fractional frame, confidence outside [0, 1], timestamp > 50 ms in the future, older than `yoloStaleSeconds` (0.5 s) | previous vector with `new = 0`. The backlog is drained and only the newest complete 48-byte record is used. Three structural refusals in a row = framing lost: buffer cleared and the socket reconnected |
 | JoystickGuard | non-finite, not 32 buttons, nothing for 0.2 s | a disconnected controller (all axes -1), which drives the model's own joystick-issue path. A malformed sample also discards the last good one |
 | OutputGate | desired pose non-finite, outside the saturation box (+-2 m), z outside [0.55, 0.70] m; while centring: see [Centring checks](#centring-checks); non-finite measured pose; nothing accepted yet | last accepted desired pose (while centring: the centring hold below); `isTracking = 0` for a non-finite measured pose. Arm, E-stop and joystick-issue bits are copied from the operator path in every mode; triggers are forced to 0/1. There is no separate height-step limit: z is already confined to [0.55, 0.70] m and the model's abort hold legitimately steps 0.70 -> 0.55 m in one tick |
-| MissionRuntime | any exception | returns None and latches `failed`; `serve` closes the Commander socket so the Commander's own comm-loss path (Error, then FLIGHT SAFETY stop after 1 s) takes over |
+| MissionRuntime | any exception | returns None and latches `failed`; `serve` closes the Commander socket so the Commander's own comm-loss path takes over: stream loss held 0.1 s or no echo change for 0.5 s -> Error -> EMERGENCY STOP ([evidence](evidence/model_findings.md#comm-loss), [state machine](evidence/model_findings.md#commander-land)). The stabilizer's 1 s FLIGHT SAFETY comm-loss stop is wired to a constant 0 in the saved Commander and plays no part ([evidence](evidence/model_findings.md#flight-safety)) |
 | MissionServer.step_once | an exception while reading the Commander socket, the vision socket, the pose source or the joystick source | fail-stop as above, with `stopped_reason = "input: ..."` |
 | MissionServer.run | more than 50 ms behind model time | fail-stop as above. Smaller lag is caught up tick by tick so tick-based dwells keep their meaning |
 
@@ -199,7 +199,9 @@ then the operator's.
 
 A LAND the gate has already applied is never interrupted by the gate. In
 the Commander's AUTO_LAND state a return of trigger 2 to 1 is an error and
-an emergency stop ([INTERFACES.md](INTERFACES.md)), so raising it mid-landing
+an emergency stop ([INTERFACES.md](INTERFACES.md#commander-behaviour-the-mission-server-relies-on);
+quoted lines: [evidence/model_findings.md](evidence/model_findings.md#commander-land), `chart_145`
+L137-L147 and `chart_187` L91-L99), so raising it mid-landing
 would turn a landing into a drop. While the arbiter keeps requesting LAND
 and the operator keeps arm and takeoff selected, trigger 2 stays at the
 model's LAND state (0) whatever the gate status; bad desired poses are

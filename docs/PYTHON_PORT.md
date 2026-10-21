@@ -30,7 +30,7 @@ flowchart LR
 |---|---|---|
 | Model reading | both `.mdl` files parsed directly by `tools/mdl_spec.py`. A compact spec is committed in `spec/`; `--full DIR` writes every block and line | `mdl_spec.py --check` in CI; [recorded output](evidence/checks.md#model-spec-digest-is-fresh) |
 | Mission logic: 7 MATLAB Function blocks | ported, explicit state + `reset()` | Octave runs the chart code taken from the model. 30 committed sequences (188 k ticks): 27 exact, 3 grid sequences differ by at most 1.1e-16. All 8 closed-loop scenarios (1.81 M ticks) are exact. Committed fixtures regenerate byte-identically with Octave 9.4 ([recorded output](evidence/checks.md#committed-fixtures-regenerated-by-this-octave)); the CI Octave job prints the measured max difference for its Octave |
-| Block chains (convention correction, conditioning, home pose, joystick, comm loss) | ported from the block parameters | unit tests; not checkable against Simulink here |
+| Block chains (convention correction, conditioning, home pose, joystick, comm loss) | ported from the block parameters | unit tests, [input -> output table](#block-chains); not checkable against Simulink here |
 | Original MATLAB tests | `test_phase9_landing_gate`, `test_phase9_abort_diagnostics` pass **unmodified** in Octave. The phase 10 dry run's behavioural half is re-run in Octave and its structural half is checked on the parsed model | `tools/octave/run_original_tests.m` ([recorded output: 10 PASS lines](evidence/checks.md#original-matlab-tests-unmodified-in-octave)), `tests/test_spec.py` |
 | Model code vs `matlab/phase*.txt` templates | identical once `config_autonomous()` is substituted | `tools/octave/check_templates.m` ([recorded output](evidence/checks.md#model-chart-code-vs-matlabphasetxt-templates)) |
 | Wire formats (`<6d`, `<14d`, `<d`, column-major frames) | done | protocol tests; `yolo_pad_direct_stream_fresh.py` runs unmodified as a subprocess, fed synthetic frames over TCP 18910; [decoded packet capture](INTERFACES.md#measured-traffic) |
@@ -178,6 +178,31 @@ after the tick (less spinning, later start); runner-to-runner timer behaviour,
 not a code change. The development container never gets below about 35 µs.
 This head's own CI run is linked in the pull request. Not timed on the lab PC.*
 
+### Block chains
+
+The chains ported from block parameters rather than chart code (convention
+correction, measurement conditioning, the QUARC Threshold, home pose,
+joystick, comm-loss display) have no Octave reference. This table is what the
+port outputs for the inputs of [`tests/test_blocks.py`](../tests/test_blocks.py),
+each asserted by the test named; written by
+[`tools/evidence.py`](../tools/evidence.py) `chains` (also standalone in
+[evidence/block_chains.md](evidence/block_chains.md)) and kept current by
+`--check` in CI. Not checked against Simulink.
+
+<!-- block-chains:begin (tools/evidence.py chains) -->
+| chain (model block) | input | port output | test |
+|---|---|---|---|
+| Convention correction (Motive -> RSF), `motive_to_rsf` | Motive xyz (0.4, 0.7, -0.3), rot (0, 0.25, 0) | RSF xyz (0.3, -0.4, 0.7), rot (0, 0, 0.25) (back to the RSF pose) | [`test_convention_correction_position_and_yaw`](../tests/test_blocks.py#L21) |
+| Measurement conditioning (bias -0.07 m on z, saturation [-2 -2 0]..[2 2 5], yaw unwrap) | vehicle (0.1, 0.2, 0.77, 0, 0, 3.1, 1) | measured pose (0.1, 0.2, 0.7, 3.1), isTracking 1 | [`test_conditioning_bias_saturation_unwrap`](../tests/test_blocks.py#L28) |
+| Measurement conditioning (bias -0.07 m on z, saturation [-2 -2 0]..[2 2 5], yaw unwrap) | vehicle (5, -5, -1, 0, 0, -3.1, 1) | measured pose (2, -2, 0, 3.18319), isTracking 1 (next tick; yaw = -3.1 + 2 pi) | [`test_conditioning_bias_saturation_unwrap`](../tests/test_blocks.py#L28) |
+| Measurement conditioning (bias -0.07 m on z, saturation [-2 -2 0]..[2 2 5], yaw unwrap) | vehicle (0.1, 0.2, 0.77, 0, 0, NaN, 1) | measured pose (0.1, 0.2, 0.7, NaN), isTracking 1 (next tick; NaN passes the unwrap) | [`test_unwrap_passes_nan`](../tests/test_blocks.py#L37) |
+| QUARC Threshold (>= 0.5 held 0.2 s) | t=0 s x=1; t=0.199 s x=1; t=0.2 s x=1; t=0.3 s x=0 | 0; 0; 1; 0 | [`test_threshold_timer`](../tests/test_blocks.py#L42) |
+| Calculate Home Pose (one-shot 1 s on the arm edge, only after `Clock > 5`; z + 0.70) | pose (0.3, -0.9, 0, 0.1) until 7 s then (5, 5, 5, 5); arm 1-2 s and from 6 s | at 3 s (0, 0, 0.7, 0) (edge before 5 s ignored); at 9 s (0.3, -0.9, 0.7, 0.1) (captured 6-7 s, held) | [`test_home_pose_captures_on_arm_after_5s`](../tests/test_blocks.py#L47) |
+| JOYSTICK (FrSKY mapping, E-stop held 0.2 s, disconnect = all six axes -1 for 0.2 s) | arm pressed, takeoff stick up, 0.2 s; then E-stop pressed 0.25 s; then disconnected 0.25 s | triggers [arm, takeoff, e-stop, issue]: (1, 1, 0, 0); (1, 1, 1, 0); (0, 0, 0, 1) | [`test_joystick_mapping_estop_and_disconnect`](../tests/test_blocks.py#L67) |
+| JOYSTICK takeoff axis (rz >= -0.5) | rz -0.5, -0.5, -0.5, -0.51, -0.51 (10 ms apart) | takeoff 0, 1, 1, 0, 0 (first tick: outputs held until an edge on `new`) | [`test_takeoff_axis_threshold_is_minus_half`](../tests/test_blocks.py#L97) |
+| Comm-loss display (Detect Communication loss, 0.1 s Threshold, Triggered Subsystem x Product) | stream state 0 (lost) at 1.5-1.8 s and 2.2-2.6 s, else 2 | issue from 1.6 s, shown 0 (first loss); issue from 2.3 s, shown 1 (after the first recovery) | [`test_mission_comm_issue_shown_only_after_first_recovery`](../tests/test_blocks.py#L85) |
+<!-- block-chains:end -->
+
 ## Running it
 
 ```bash
@@ -296,3 +321,12 @@ current by `--check` in CI).
   (triggers, tracking and poses); element 14, the timestamp, goes to a
   separate selector for the loopback echo. Only the label is misleading
   ([evidence](evidence/model_findings.md#data-out)).
+* In the Commander, the stabilizer's FLIGHT SAFETY subsystem has a 1 s
+  comm-loss stop (Communication Loss AND Arm, held 1 s, "Communication with
+  Commander lost"), but its `Communication Loss (0,1)` input is wired to a
+  Constant 0, so it can never fire. Losing the mission server is handled only
+  by the Commander's state machine: comm issue -> Error -> EMERGENCY STOP
+  ([evidence](evidence/model_findings.md#flight-safety)). The same Error
+  follows a return of Takeoff/Land to 1 during AUTO_LAND, which is why the
+  port never raises it during an applied LAND
+  ([evidence](evidence/model_findings.md#commander-land)).
