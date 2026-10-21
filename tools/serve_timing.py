@@ -6,9 +6,16 @@ local runs; ``--ci RUN_ID ...`` reads the same statistics from the Windows CI
 job's log (``gh run view --log``, needs the GitHub CLI), so the figure shows
 both hosts from recorded output.
 
+The local runs were made in the development container (Linux x86_64,
+Python 3.12.15), not on the lab PC; ``--host-label`` records that.
+``--keep-local`` keeps the local runs already in ``--json`` and refreshes
+only the CI entries (each tagged with the commit it ran on).
+
 Usage::
 
-    python tools/serve_timing.py --runs 5 --ci 39493996791 39500677539 --json docs/figures/data/serve_timing.json
+    python tools/serve_timing.py --runs 5 --host-label "dev container" \
+        --ci 39493996791 39500677539 39510188039 --json docs/figures/data/serve_timing.json
+    python tools/serve_timing.py --keep-local --ci ... --json docs/figures/data/serve_timing.json
 """
 from __future__ import annotations
 
@@ -43,7 +50,9 @@ def ci_run(run_id: str, repo: str) -> dict:
     missing = [k for k in KEYS if k not in st]
     if missing:
         raise SystemExit(f"run {run_id}: no {missing} in the Windows job log")
-    return {"run_id": run_id, **st}
+    sha = subprocess.run(["gh", "run", "view", run_id, "-R", repo, "--json", "headSha", "-q", ".headSha"],
+                         check=True, capture_output=True, text=True).stdout.strip()
+    return {"run_id": run_id, "commit": sha, **st}
 
 
 def main(argv=None) -> int:
@@ -53,11 +62,17 @@ def main(argv=None) -> int:
     ap.add_argument("--ci", nargs="*", default=[])
     ap.add_argument("--repo", default="arman-dogru/quanser_python_auto")
     ap.add_argument("--json", type=Path)
+    ap.add_argument("--host-label", default="local", help="what the local machine is, e.g. 'dev container'")
+    ap.add_argument("--keep-local", action="store_true", help="reuse the local runs already in --json")
     args = ap.parse_args(argv)
-    data = {"duration_s": args.duration,
-            "local": {"host": f"{platform.system()} {platform.machine()}, Python {platform.python_version()}",
-                      "runs": [local_run(args.duration) for _ in range(args.runs)]},
-            "windows_ci": [ci_run(r, args.repo) for r in args.ci]}
+    if args.keep_local:
+        local = json.loads(args.json.read_text())["local"]
+        local.setdefault("label", args.host_label)
+    else:
+        local = {"label": args.host_label,
+                 "host": f"{platform.system()} {platform.machine()}, Python {platform.python_version()}",
+                 "runs": [local_run(args.duration) for _ in range(args.runs)]}
+    data = {"duration_s": args.duration, "local": local, "windows_ci": [ci_run(r, args.repo) for r in args.ci]}
     print(json.dumps(data, indent=1))
     if args.json:
         args.json.write_text(json.dumps(data, indent=1) + "\n")

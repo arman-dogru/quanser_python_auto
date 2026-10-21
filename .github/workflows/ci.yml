@@ -26,6 +26,8 @@ jobs:
         run: ruff check src tests tools
       - name: Model spec is fresh
         run: python tools/mdl_spec.py --check
+      - name: Model-finding evidence quotes current lines
+        run: python tools/evidence.py findings --check
       - name: Tests (committed Octave fixtures; live-Octave and vision tests skip)
         run: pytest -q -m "not vision"
       - name: Original vision unit tests
@@ -47,8 +49,10 @@ jobs:
         run: octave-cli --version | head -1
       - name: Live Octave tests
         run: pytest -q -m octave -rs
-      - name: Committed fixtures regenerate from this Octave
+      - name: Committed fixtures regenerate from this Octave (prints the max difference)
         run: python tools/make_fixtures.py --check
+      - name: NaN-hold reproduction, Octave vs Python (docs/evidence/nan_hold.md)
+        run: python tools/evidence.py nan-hold --check
       - name: All eight SIL scenarios through Octave
         run: |
           python tools/make_fixtures.py --scenarios outputs/scenario_parity

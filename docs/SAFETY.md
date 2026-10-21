@@ -128,7 +128,7 @@ A refused centring pose is replaced by a hold:
   instead and the capture is retried on the next tick, so a single bad
   OptiTrack sample never becomes, or persists as, the hold.
 
-![Two closed-loop runs of the nominal mission with the desired x the model sends replaced by NaN (red band). Left: 1 s into centring for 2.5 s; the gate status goes to centring-refused at 20.46 s and to centring-fault at 22.46 s, the desired x sent stays at the 0.361 m hold, the vehicle holds at 0.70 m and Takeoff/Land stays at the operator's 1 for the rest of the 90 s run. Right: 50 ms after the gate applied LAND for 2.55 s; the status goes refused at 32.71 s and fault at 34.71 s, Takeoff/Land stays 0 from 32.66 s and the vehicle touches down at 34.86 s.](figures/gate_faults.png)
+![Two closed-loop runs of the nominal mission with the desired x the model sends replaced by NaN (red band). Left: 1 s into centring for 2.5 s; the gate status goes to centring-refused at 20.46 s and to centring-fault at 22.46 s, the desired x sent stays at the 0.361 m hold, the vehicle holds at 0.70 m and Takeoff/Land stays at the operator's 1 (plot shown to 43 s; the run holds like this until it ends at 90 s, see visuals.json). Right: 50 ms after the gate applied LAND for 2.55 s; the status goes refused at 32.71 s and fault at 34.71 s, Takeoff/Land stays 0 from 32.66 s and the vehicle touches down at 34.86 s.](figures/gate_faults.png)
 
 *Measured in the closed-loop simulation, same injection as
 `tests/test_sim.py::test_centring_fault_during_autonomous_land_never_raises_takeoff_land`.
@@ -136,7 +136,9 @@ Left: refused from 20.461 s, escalated to `centring-fault` at 22.460 s (2 s
 later), one escalation, the hold (x = 0.361 m) is what is sent, no LAND is
 ever latched and the fault stays latched while centring lasts. Right: LAND
 applied at 32.660 s, refused from 32.712 s, fault at 34.711 s, Takeoff/Land
-never raised again, landed at 34.860 s. Source:
+never raised again, landed at 34.860 s. The left plot is cropped at 43 s; that
+run holds until it ends at 90 s with 69,539 refused centring ticks
+(`centring_refusals` in visuals.json). Source:
 [`tools/make_figures.py`](../tools/make_figures.py) (`gate_faults_figure`),
 numbers in [visuals.json](figures/data/visuals.json) (`gate_faults`).*
 
@@ -243,7 +245,7 @@ takeoff or disarms; the next LAND is a new one.
 
   *Source: [`tools/pad_sweep.py`](../tools/pad_sweep.py) (data) and
   [`tools/make_figures.py`](../tools/make_figures.py) (`pad_sweep_figure`).*
-* `tests/test_sockets.py`: fail-stop closes the Commander socket (also when
+* `tests/test_sockets.py` (captured traffic: [INTERFACES.md](INTERFACES.md#measured-traffic)): fail-stop closes the Commander socket (also when
   a pose, joystick or vision read raises); overrun stops; no torn 112-byte
   records under back-pressure; dry-run sends nothing; the loop does not
   busy-spin; centring refusals and their escalation show up in the serve

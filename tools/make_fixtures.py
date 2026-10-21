@@ -449,13 +449,17 @@ def main(argv=None) -> int:
                             print(f"  {name}: max diff {d.max():g} at row {r} col {c}; "
                                   f"{int((d > 1e-12).any(axis=1).sum())} rows > 1e-12")
                 return 1
+            n_out = sum(1 for f in [*tmp.rglob("*.out.csv"), *tmp.rglob("*.out.csv.gz")])
             if last_bits:
                 # A different Octave build/BLAS can round the 2x2 centring
                 # products differently; anything beyond 1e-12 is a failure.
+                worst = max(_maxdiff(_content(tmp / f), _content(OUT / f)) for f in last_bits)
                 print(f"fixtures regenerate within 1e-12 ({len(last_bits)} output files differ in the last bits:",
                       ", ".join(sorted(last_bits)) + ")")
+                print(f"max |regenerated - committed| = {worst:.3g} over {n_out} output files")
                 return 0
             print("fixtures regenerate byte-identically")
+            print(f"max |regenerated - committed| = 0 over {n_out} output files")
             return 0
     shutil.rmtree(OUT, ignore_errors=True)
     build_inputs(OUT)
@@ -470,6 +474,13 @@ def _close(a: bytes, b: bytes, tol: float = 1e-12) -> bool:
     x = np.loadtxt(a.decode().splitlines(), delimiter=",", ndmin=2)
     y = np.loadtxt(b.decode().splitlines(), delimiter=",", ndmin=2)
     return compare(x, y) <= tol
+
+
+def _maxdiff(a: bytes, b: bytes) -> float:
+    from qdrone_autoland.parity import compare
+    x = np.loadtxt(a.decode().splitlines(), delimiter=",", ndmin=2)
+    y = np.loadtxt(b.decode().splitlines(), delimiter=",", ndmin=2)
+    return compare(x, y)
 
 
 def _content(p: Path) -> bytes:

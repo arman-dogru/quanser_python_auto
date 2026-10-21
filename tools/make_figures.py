@@ -178,6 +178,7 @@ def mutation_figure() -> dict | None:
 # ------------------------------------------------------------------ closed-loop visuals
 A = DEFAULT.auto
 EDGE_PAD = (-1.1, -0.407)          # never confirmed in the sweep (PYTHON_PORT.md)
+EDGE_PAD_2 = (-1.1, -0.136)        # the other one
 COMPARE_REV = "eec0a74"           # earlier output gate, swept by tools/pad_sweep.py --rev
 
 
@@ -320,6 +321,15 @@ def edge_pad_figure() -> dict:
     out.update({"pad": list(EDGE_PAD), "confirmed": bool(np.nanmax(r.signals["confirmed"]) > 0),
                 "landed": "landed" in r.events, "gate_faults": int(r.signals["faults"].sum()),
                 "final_xyz": [round(float(v), 3) for v in r.vehicle.pos]})
+    # The other never-confirmed pad of the sweep: numbers only (same mechanism, no figure).
+    sc2 = dataclasses.replace(sc, name="edge-pad-2", pad_xy=EDGE_PAD_2)
+    r2 = sim.run(sc2, record_block_io=True)
+    fr2 = _frames(r2)
+    out["second_pad"] = {"pad": list(EDGE_PAD_2), "detections": int((fr2[:, 3] > 0).sum()),
+                         "max_consecutive": int(fr2[:, 4].max()),
+                         "confirmed": bool(np.nanmax(r2.signals["confirmed"]) > 0), "landed": "landed" in r2.events,
+                         "gate_faults": int(r2.signals["faults"].sum()),
+                         "final_xyz": [round(float(v), 3) for v in r2.vehicle.pos]}
     return out
 
 
@@ -446,9 +456,10 @@ def serve_timing_figure() -> dict | None:
     if not p.exists():
         return None
     d = json.loads(p.read_text())
-    rows = [(f"{d['local']['host'].split(',')[0]} #{i + 1}", r) for i, r in enumerate(d["local"]["runs"])]
-    rows += [(f"Windows CI {r['run_id']}", r) for r in d["windows_ci"]]
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(9, 0.4 * len(rows) + 1.3), sharey=True)
+    host = d["local"]["host"].replace("Linux x86_64, Python", "Linux, Py")
+    rows = [(f"{d['local'].get('label', 'local')} ({host}) #{i + 1}", r) for i, r in enumerate(d["local"]["runs"])]
+    rows += [(f"Windows CI run {r['run_id']} @ {r['commit'][:7]}", r) for r in d["windows_ci"]]
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(9.6, 0.4 * len(rows) + 1.5), sharey=True)
     ys = np.arange(len(rows))
     for k, c in [("lag_p50_s", "#55a868"), ("lag_p99_s", "#4c72b0"), ("lag_p999_s", "#8172b2"),
                                 ("max_lag_s", "#c44e52")]:
@@ -468,8 +479,8 @@ def serve_timing_figure() -> dict | None:
         a2.text(v + 1, y, f"{v:.0f} %", va="center", fontsize=7)
     a2.set_xlim(0, 100)
     a2.set_xlabel("CPU, % of one core")
-    fig.suptitle(f"qautoland serve --mode dry-run, {d['duration_s']:.0f} s per run, 1 kHz model time", fontsize=9,
-                 y=0.995)
+    fig.suptitle(f"qautoland serve --mode dry-run, {d['duration_s']:.0f} s per run, 1 kHz model time "
+                 "(not the lab PC)", fontsize=9, y=0.995)
     fig.tight_layout()
     fig.savefig(FIG / "serve_timing.png")
     plt.close(fig)

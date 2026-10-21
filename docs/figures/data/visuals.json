@@ -29,7 +29,23 @@
    -1.2,
    1.0,
    0.7
-  ]
+  ],
+  "second_pad": {
+   "pad": [
+    -1.1,
+    -0.136
+   ],
+   "detections": 10,
+   "max_consecutive": 4,
+   "confirmed": false,
+   "landed": false,
+   "gate_faults": 0,
+   "final_xyz": [
+    -1.2,
+    1.0,
+    0.7
+   ]
+  }
  },
  "pad_sweep": {
   "this branch": {
@@ -74,53 +90,59 @@
   }
  },
  "serve_timing": {
-  "Linux x86_64 #1": {
+  "dev container (Linux, Py 3.12.15) #1": {
    "cpu_pct": 15.7,
    "lag_p50_ms": 0.037,
    "lag_p99_ms": 0.052,
    "max_lag_ms": 3.355
   },
-  "Linux x86_64 #2": {
+  "dev container (Linux, Py 3.12.15) #2": {
    "cpu_pct": 16.8,
    "lag_p50_ms": 0.0345,
    "lag_p99_ms": 0.049,
    "max_lag_ms": 0.252
   },
-  "Linux x86_64 #3": {
+  "dev container (Linux, Py 3.12.15) #3": {
    "cpu_pct": 18.1,
    "lag_p50_ms": 0.0352,
    "lag_p99_ms": 0.052,
    "max_lag_ms": 3.295
   },
-  "Linux x86_64 #4": {
+  "dev container (Linux, Py 3.12.15) #4": {
    "cpu_pct": 17.2,
    "lag_p50_ms": 0.0374,
    "lag_p99_ms": 0.053,
    "max_lag_ms": 0.176
   },
-  "Linux x86_64 #5": {
+  "dev container (Linux, Py 3.12.15) #5": {
    "cpu_pct": 17.0,
    "lag_p50_ms": 0.035,
    "lag_p99_ms": 0.049,
    "max_lag_ms": 0.209
   },
-  "Windows CI 39493996791": {
+  "Windows CI run 39493996791 @ eec0a74": {
    "cpu_pct": 15.0,
    "lag_p50_ms": 0.0737,
    "lag_p99_ms": 0.32,
    "max_lag_ms": 4.798
   },
-  "Windows CI 39500677539": {
+  "Windows CI run 39500677539 @ 83de962": {
    "cpu_pct": 36.3,
    "lag_p50_ms": 0.0004,
    "lag_p99_ms": 0.341,
    "max_lag_ms": 0.434
   },
-  "Windows CI 39510188039": {
+  "Windows CI run 39510188039 @ a2ccec4": {
    "cpu_pct": 33.1,
    "lag_p50_ms": 0.0004,
    "lag_p99_ms": 0.327,
    "max_lag_ms": 0.468
+  },
+  "Windows CI run 39526704713 @ 4d4066b": {
+   "cpu_pct": 35.9,
+   "lag_p50_ms": 0.0004,
+   "lag_p99_ms": 0.33,
+   "max_lag_ms": 0.461
   }
  }
 }

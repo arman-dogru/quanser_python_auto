@@ -12,7 +12,8 @@ Usage::
     python tools/pad_sweep.py --rev eec0a74 --json docs/figures/data/pad_sweep_eec0a74.json
 
 ``--rev`` runs the same grid against an earlier commit, checked out into a
-temporary git worktree (commits before ``sim.run_pad`` existed are driven
+temporary git worktree (it needs the full history: on a shallow clone, such as
+the default ``actions/checkout``, it stops with a message) (commits before ``sim.run_pad`` existed are driven
 through ``sim.run`` with the same scenario change). The figures use it to
 compare the final output gate with an earlier one.
 """
@@ -58,6 +59,12 @@ if __name__ == "__main__":
 
 
 def run_at_rev(rev: str, pads, duration: float, jobs: int) -> tuple[str, list[dict]]:
+    shallow = subprocess.run(["git", "rev-parse", "--is-shallow-repository"], cwd=ROOT, capture_output=True,
+                             text=True).stdout.strip()
+    if shallow == "true":
+        raise SystemExit("--rev needs the full git history; this clone is shallow (git fetch --unshallow)")
+    if subprocess.run(["git", "cat-file", "-e", f"{rev}^{{commit}}"], cwd=ROOT, capture_output=True).returncode:
+        raise SystemExit(f"--rev {rev}: no such commit in this clone")
     sha = subprocess.run(["git", "rev-parse", rev], cwd=ROOT, check=True, capture_output=True,
                          text=True).stdout.strip()
     with tempfile.TemporaryDirectory() as tmp:

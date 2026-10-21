@@ -55,10 +55,17 @@ qautoland serve --mode dry-run    # real sockets, sends nothing
 
 ![Two 12 by 8 heatmaps of pad positions: with this port 94 of 96 pads land with zero output-gate faults and 12 to 23 mm touchdown error, the other two are never confirmed by the model's search; at the earlier commit eec0a74, 56 of 96 land and 38 stall on a refused centring entry.](docs/figures/pad_sweep.png)
 
-*Both figures: `python tools/make_figures.py` from real runs of the port
+*Both figures: [`tools/make_figures.py`](tools/make_figures.py) from real runs of the port
 ([landing data](docs/figures/data/visuals.json),
-[sweep data](docs/figures/data/pad_sweep.json) from `tools/pad_sweep.py`).
+[sweep data](docs/figures/data/pad_sweep.json) from [`tools/pad_sweep.py`](tools/pad_sweep.py)).
 The stand-in vehicle and camera are not a flight model.*
+
+Interop with the unmodified publisher and the Commander's packet layout is
+shown as captured, decoded traffic (frames sent, 48-byte observations, a
+112-byte command and its 8-byte echo) in
+[docs/INTERFACES.md](docs/INTERFACES.md#measured-traffic), written by
+[`tools/evidence.py`](tools/evidence.py). Evidence for each finding about the
+saved models: [docs/evidence/model_findings.md](docs/evidence/model_findings.md).
 
 Details, evidence, figures and findings about the saved models:
 [docs/PYTHON_PORT.md](docs/PYTHON_PORT.md). The port adds files under `src/`,
