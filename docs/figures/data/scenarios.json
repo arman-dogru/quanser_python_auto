@@ -1,0 +1,87 @@
+{
+ "nominal-autoland": {
+  "events": {
+   "landing_ready": 32.660000000000004,
+   "landed": 34.86
+  },
+  "touchdown": [
+   0.3613,
+   -0.3195
+  ],
+  "pad": [
+   0.35,
+   -0.3
+  ],
+  "abort_bits": 8
+ },
+ "monitor-only": {
+  "events": {
+   "landing_ready": 32.660000000000004
+  },
+  "abort_bits": 0,
+  "gate_faults": 0,
+  "vision_refused": {},
+  "pose_refused": {}
+ },
+ "vision-loss-in-descent": {
+  "events": {
+   "vision_lost": 24.661
+  },
+  "abort_bits": 1,
+  "gate_faults": 0,
+  "vision_refused": {},
+  "pose_refused": {}
+ },
+ "tracking-loss-in-centering": {
+  "events": {
+   "tracking_lost": 22.661
+  },
+  "abort_bits": 2,
+  "gate_faults": 0,
+  "vision_refused": {},
+  "pose_refused": {
+   "stale": 1
+  }
+ },
+ "estop-in-search": {
+  "events": {},
+  "abort_bits": 8,
+  "gate_faults": 0,
+  "vision_refused": {},
+  "pose_refused": {}
+ },
+ "joystick-disconnect": {
+  "events": {},
+  "abort_bits": 0,
+  "gate_faults": 0,
+  "vision_refused": {},
+  "pose_refused": {}
+ },
+ "malformed-vision": {
+  "events": {
+   "garbage_injected": 10.0,
+   "vision_resync": 10.005,
+   "landing_ready": 32.660000000000004,
+   "landed": 34.86
+  },
+  "abort_bits": 8,
+  "gate_faults": 0,
+  "vision_refused": {
+   "from-future": 1,
+   "stale": 1,
+   "bad-confidence": 1,
+   "non-finite": 1,
+   "bad-detected-flag": 4
+  },
+  "pose_refused": {}
+ },
+ "operator-manual-land": {
+  "events": {
+   "landed": 27.408
+  },
+  "abort_bits": 0,
+  "gate_faults": 0,
+  "vision_refused": {},
+  "pose_refused": {}
+ }
+}

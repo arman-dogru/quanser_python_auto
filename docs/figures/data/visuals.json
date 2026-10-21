@@ -1,0 +1,148 @@
+{
+ "landing_xy": {
+  "detections": 76,
+  "max_consecutive": 5,
+  "touchdown_error_m": 0.0226
+ },
+ "landing_timeline": {
+  "events": {
+   "arm": 6.0,
+   "takeoff": 7.0,
+   "pad confirmed": 19.46,
+   "landing ready": 32.66,
+   "landed": 34.86
+  },
+  "gate_not_ok_ticks": 0,
+  "final_abort_bits": 8
+ },
+ "edge_pad": {
+  "detections": 5,
+  "max_consecutive": 4,
+  "pad": [
+   -1.1,
+   -0.407
+  ],
+  "confirmed": false,
+  "landed": false,
+  "gate_faults": 0,
+  "final_xyz": [
+   -1.2,
+   1.0,
+   0.7
+  ],
+  "second_pad": {
+   "pad": [
+    -1.1,
+    -0.136
+   ],
+   "detections": 10,
+   "max_consecutive": 4,
+   "confirmed": false,
+   "landed": false,
+   "gate_faults": 0,
+   "final_xyz": [
+    -1.2,
+    1.0,
+    0.7
+   ]
+  }
+ },
+ "pad_sweep": {
+  "this branch": {
+   "landed": 94,
+   "with_gate_faults": 0,
+   "pads": 96,
+   "commit": null
+  },
+  "eec0a74, earlier output gate": {
+   "landed": 56,
+   "with_gate_faults": 38,
+   "pads": 96,
+   "commit": "eec0a743a5333047e708c7aec10375ccfa3e1ffe"
+  }
+ },
+ "gate_faults": {
+  "centring": {
+   "nan_window_s": [
+    20.461,
+    22.96
+   ],
+   "landed": false,
+   "landed_s": null,
+   "max_gate_status": 2.0,
+   "escalations": 1,
+   "centring_refusals": 69539,
+   "first_land_applied_s": null,
+   "trig2_raised_after_land": false
+  },
+  "land": {
+   "nan_window_s": [
+    32.712,
+    35.261
+   ],
+   "landed": true,
+   "landed_s": 34.86,
+   "max_gate_status": 2.0,
+   "escalations": 1,
+   "centring_refusals": 2149,
+   "first_land_applied_s": 32.66,
+   "trig2_raised_after_land": false
+  }
+ },
+ "serve_timing": {
+  "dev container (Linux, Py 3.12.15) #1": {
+   "cpu_pct": 15.7,
+   "lag_p50_ms": 0.037,
+   "lag_p99_ms": 0.052,
+   "max_lag_ms": 3.355
+  },
+  "dev container (Linux, Py 3.12.15) #2": {
+   "cpu_pct": 16.8,
+   "lag_p50_ms": 0.0345,
+   "lag_p99_ms": 0.049,
+   "max_lag_ms": 0.252
+  },
+  "dev container (Linux, Py 3.12.15) #3": {
+   "cpu_pct": 18.1,
+   "lag_p50_ms": 0.0352,
+   "lag_p99_ms": 0.052,
+   "max_lag_ms": 3.295
+  },
+  "dev container (Linux, Py 3.12.15) #4": {
+   "cpu_pct": 17.2,
+   "lag_p50_ms": 0.0374,
+   "lag_p99_ms": 0.053,
+   "max_lag_ms": 0.176
+  },
+  "dev container (Linux, Py 3.12.15) #5": {
+   "cpu_pct": 17.0,
+   "lag_p50_ms": 0.035,
+   "lag_p99_ms": 0.049,
+   "max_lag_ms": 0.209
+  },
+  "Windows CI run 39493996791 @ eec0a74": {
+   "cpu_pct": 15.0,
+   "lag_p50_ms": 0.0737,
+   "lag_p99_ms": 0.32,
+   "max_lag_ms": 4.798
+  },
+  "Windows CI run 39500677539 @ 83de962": {
+   "cpu_pct": 36.3,
+   "lag_p50_ms": 0.0004,
+   "lag_p99_ms": 0.341,
+   "max_lag_ms": 0.434
+  },
+  "Windows CI run 39510188039 @ a2ccec4": {
+   "cpu_pct": 33.1,
+   "lag_p50_ms": 0.0004,
+   "lag_p99_ms": 0.327,
+   "max_lag_ms": 0.468
+  },
+  "Windows CI run 39526704713 @ 4d4066b": {
+   "cpu_pct": 35.9,
+   "lag_p50_ms": 0.0004,
+   "lag_p99_ms": 0.33,
+   "max_lag_ms": 0.461
+  }
+ }
+}

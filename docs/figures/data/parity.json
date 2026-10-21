@@ -1,0 +1,66 @@
+{
+ "committed": {
+  "abort": {
+   "ticks": 36075,
+   "sequences": 5,
+   "max_abs_error": 0.0
+  },
+  "arbiter": {
+   "ticks": 35779,
+   "sequences": 6,
+   "max_abs_error": 0.0
+  },
+  "confirm": {
+   "ticks": 36695,
+   "sequences": 5,
+   "max_abs_error": 0.0
+  },
+  "extract": {
+   "ticks": 207,
+   "sequences": 2,
+   "max_abs_error": 0.0
+  },
+  "gate": {
+   "ticks": 36107,
+   "sequences": 6,
+   "max_abs_error": 0.0
+  },
+  "grid": {
+   "ticks": 43229,
+   "sequences": 4,
+   "max_abs_error": 1.1102230246251565e-16
+  },
+  "mscomm": {
+   "ticks": 248,
+   "sequences": 2,
+   "max_abs_error": 0.0
+  }
+ },
+ "scenarios": {
+  "abort": {
+   "ticks": 362131,
+   "sequences": 8,
+   "max_abs_error": 0.0
+  },
+  "arbiter": {
+   "ticks": 362131,
+   "sequences": 8,
+   "max_abs_error": 0.0
+  },
+  "confirm": {
+   "ticks": 362131,
+   "sequences": 8,
+   "max_abs_error": 0.0
+  },
+  "gate": {
+   "ticks": 362131,
+   "sequences": 8,
+   "max_abs_error": 0.0
+  },
+  "grid": {
+   "ticks": 362131,
+   "sequences": 8,
+   "max_abs_error": 0.0
+  }
+ }
+}

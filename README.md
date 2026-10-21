@@ -34,10 +34,48 @@ python python/yolo_pad_direct_stream_fresh.py
 
 The direct stream path receives Commander camera frames on TCP 18910 and publishes observations on TCP 18901. This command starts vision only; it does not launch the MATLAB mission server or vehicle. `python/qdrone_camera_streamer.py` is a separate vehicle-side alternative requiring the separately installed Quanser Python SDK; it is not needed for the existing direct-stream Commander path.
 
+## Python port of the Phase 10 mission server
+
+`src/qdrone_autoland` ports the Phase 10 mission server to Python, matching the
+Commander's packets and interoperating with `python/yolo_pad_direct_stream_fresh.py`
+as it is. Its mission logic is checked tick for tick against GNU Octave running
+the chart code extracted from the model. A safety layer guards its inputs and
+outputs. It **has not flown**: no MATLAB, QUARC or hardware was used, and the
+OptiTrack and joystick readers are not written yet, so it cannot fly the
+vehicle as it stands. Autonomous LAND is off by default.
+
+```bash
+pip install -e ".[dev]"
+pytest -q
+qautoland sim                     # closed-loop scenarios against a stand-in vehicle
+qautoland serve --mode dry-run    # real sockets, sends nothing
+```
+
+![Top view of a closed-loop software-in-the-loop run of the nominal mission against a stand-in vehicle: grid search, the pad seen and confirmed, centring and descent, touchdown 23 mm from the pad at 34.9 s.](docs/figures/landing_xy.png)
+
+![Two 12 by 8 heatmaps of pad positions: with this port 94 of 96 pads land with zero output-gate faults and 12 to 23 mm touchdown error, the other two are never confirmed by the model's search; at the earlier commit eec0a74, 56 of 96 land and 38 stall on a refused centring entry.](docs/figures/pad_sweep.png)
+
+*Both figures: [`tools/make_figures.py`](tools/make_figures.py) from real runs of the port
+([landing data](docs/figures/data/visuals.json),
+[sweep data](docs/figures/data/pad_sweep.json) from [`tools/pad_sweep.py`](tools/pad_sweep.py)).
+The stand-in vehicle and camera are not a flight model.*
+
+Interop with the unmodified publisher and the Commander's packet layout is
+shown as captured, decoded traffic (frames sent, 48-byte observations, a
+112-byte command and its 8-byte echo) in
+[docs/INTERFACES.md](docs/INTERFACES.md#measured-traffic), written by
+[`tools/evidence.py`](tools/evidence.py). Evidence for each finding about the
+saved models: [docs/evidence/model_findings.md](docs/evidence/model_findings.md).
+
+Details, evidence, figures and findings about the saved models:
+[docs/PYTHON_PORT.md](docs/PYTHON_PORT.md). The port adds files under `src/`,
+`tests/`, `tools/`, `docs/` and `.github/`, plus `pyproject.toml`; of the
+existing files it changes only this README, `.gitignore` and `.gitattributes`.
+
 ## Porting to Python
 
 Use the saved Phase 10 model as the behavioral reference, with `matlab/phase8_grid_manager_code.txt`, `phase9_landing_gate_code.txt`, `phase9_abort_diagnostic_code.txt`, and `phase10_autoland_arbiter_code.txt`. Preserve the existing packet layouts, camera freshness logic, coordinate transforms, camera offset, flight bounds, operator triggers, communication-loss behavior, and landing-readiness gate. Existing phase 9 and phase 10 MATLAB tests are included as behavioral specifications.
 
 The build scripts form a phase chain and some refuse to overwrite existing models. Do not rerun the full chain against this snapshot without reading each script. The saved models may contain absolute lab paths; resolve those to the copied calibration files in MATLAB before building on another machine. MATLAB R2021b, QUARC, Quanser libraries, Motive/OptiTrack, and the lab hardware remain external prerequisites. Python dependencies are listed without invented version pins; the original environment did not supply a lockfile.
 
-`docs/source_manifest.json` records original file hashes and paths. Apart from this README, copied source files are unchanged. No Python flight-control port has been added during packaging.
+`docs/source_manifest.json` records original file hashes and paths. Apart from this README, copied source files are unchanged. No Python flight-control port was added during packaging; the Python port described above was added afterwards and leaves the copied sources unchanged.

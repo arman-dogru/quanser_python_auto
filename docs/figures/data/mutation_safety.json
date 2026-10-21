@@ -1,0 +1,601 @@
+{
+ "sweep": "safety",
+ "mutants": 96,
+ "summary": {
+  "all": {
+   "killed": 93,
+   "killed-error": 0,
+   "timeout": 0,
+   "survived": 3
+  }
+ },
+ "survivors": [
+  "rv-takeoff-not-gated",
+  "rv-og-meas-none-tracking",
+  "rv-rt-nonfinite-check"
+ ],
+ "equivalent": {
+  "rv-takeoff-not-gated": "The FrSKY mapping already computes takeoff = 0 from rz = -1 before the issue latches, and the mapping is held while the issue is set, so the held takeoff is already 0.",
+  "rv-og-meas-none-tracking": "measured is None only if no finite measured pose was ever seen; that same tick took the non-finite branch, which already set tracking = 0.",
+  "rv-rt-nonfinite-check": "Defence in depth: every packet field is finite after the OutputGate (desired and measured are finite-checked, triggers are 0/1, the timestamp is sanitised)."
+ },
+ "seconds": 56.1,
+ "results": [
+  {
+   "id": "pg-nan",
+   "file": "safety.py",
+   "rule": "non-finite pose refused",
+   "all": "killed"
+  },
+  {
+   "id": "pg-stale",
+   "file": "safety.py",
+   "rule": "stale pose -> lost",
+   "all": "killed"
+  },
+  {
+   "id": "pg-lost-tracking",
+   "file": "safety.py",
+   "rule": "lost sample has tracking 0",
+   "all": "killed"
+  },
+  {
+   "id": "pg-catch",
+   "file": "safety.py",
+   "rule": "garbage pose objects caught",
+   "all": "killed"
+  },
+  {
+   "id": "vg-finite",
+   "file": "safety.py",
+   "rule": "non-finite vision refused",
+   "all": "killed"
+  },
+  {
+   "id": "vg-flag",
+   "file": "safety.py",
+   "rule": "detected must be 0/1",
+   "all": "killed"
+  },
+  {
+   "id": "vg-frame",
+   "file": "safety.py",
+   "rule": "frame integer >= 0",
+   "all": "killed"
+  },
+  {
+   "id": "vg-conf",
+   "file": "safety.py",
+   "rule": "confidence in [0,1]",
+   "all": "killed"
+  },
+  {
+   "id": "vg-future",
+   "file": "safety.py",
+   "rule": "future timestamps refused",
+   "all": "killed"
+  },
+  {
+   "id": "vg-stale",
+   "file": "safety.py",
+   "rule": "stale observation refused",
+   "all": "killed"
+  },
+  {
+   "id": "vg-resync",
+   "file": "safety.py",
+   "rule": "resync after 3 structural",
+   "all": "killed"
+  },
+  {
+   "id": "vg-resync-flag",
+   "file": "safety.py",
+   "rule": "resync requests reconnect",
+   "all": "killed"
+  },
+  {
+   "id": "vg-accept-reset",
+   "file": "safety.py",
+   "rule": "accepted record resets counter",
+   "all": "killed"
+  },
+  {
+   "id": "jg-stale",
+   "file": "safety.py",
+   "rule": "stale joystick -> disconnected",
+   "all": "killed"
+  },
+  {
+   "id": "jg-buttons",
+   "file": "safety.py",
+   "rule": "32 buttons required",
+   "all": "killed"
+  },
+  {
+   "id": "jg-finite",
+   "file": "safety.py",
+   "rule": "finite joystick required",
+   "all": "killed"
+  },
+  {
+   "id": "og-estop",
+   "file": "safety.py",
+   "rule": "E-stop from operator",
+   "all": "killed"
+  },
+  {
+   "id": "og-arm",
+   "file": "safety.py",
+   "rule": "arm from operator",
+   "all": "killed"
+  },
+  {
+   "id": "og-issue",
+   "file": "safety.py",
+   "rule": "joystick issue from operator",
+   "all": "killed"
+  },
+  {
+   "id": "og-mode",
+   "file": "safety.py",
+   "rule": "LAND only in AUTOLAND",
+   "all": "killed"
+  },
+  {
+   "id": "og-autoland-arm",
+   "file": "safety.py",
+   "rule": "LAND only while armed",
+   "all": "killed"
+  },
+  {
+   "id": "og-dryrun",
+   "file": "safety.py",
+   "rule": "dry-run sends nothing",
+   "all": "killed"
+  },
+  {
+   "id": "og-geofence",
+   "file": "safety.py",
+   "rule": "geofence enforced",
+   "all": "killed"
+  },
+  {
+   "id": "og-height",
+   "file": "safety.py",
+   "rule": "height range enforced",
+   "all": "killed"
+  },
+  {
+   "id": "og-step",
+   "file": "safety.py",
+   "rule": "centering step limit",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-last",
+   "file": "safety.py",
+   "rule": "fault holds last good pose",
+   "all": "killed"
+  },
+  {
+   "id": "og-measured-nan",
+   "file": "safety.py",
+   "rule": "non-finite measured -> no tracking",
+   "all": "killed"
+  },
+  {
+   "id": "og-bool",
+   "file": "safety.py",
+   "rule": "operator triggers coerced to 0/1",
+   "all": "killed"
+  },
+  {
+   "id": "og-desired-finite",
+   "file": "safety.py",
+   "rule": "non-finite desired refused",
+   "all": "killed"
+  },
+  {
+   "id": "rt-failstop",
+   "file": "runtime.py",
+   "rule": "exceptions fail-stop",
+   "all": "killed"
+  },
+  {
+   "id": "rt-latched",
+   "file": "runtime.py",
+   "rule": "failure latched",
+   "all": "killed"
+  },
+  {
+   "id": "rt-guard-pose",
+   "file": "runtime.py",
+   "rule": "pose guard on path",
+   "all": "killed"
+  },
+  {
+   "id": "rt-guard-joy",
+   "file": "runtime.py",
+   "rule": "joystick guard on path",
+   "all": "killed"
+  },
+  {
+   "id": "sv-disconnect",
+   "file": "io/serve.py",
+   "rule": "fail-stop disconnects Commander",
+   "all": "killed"
+  },
+  {
+   "id": "sv-overrun",
+   "file": "io/serve.py",
+   "rule": "overrun fail-stops",
+   "all": "killed"
+  },
+  {
+   "id": "sv-resync",
+   "file": "io/serve.py",
+   "rule": "resync closes vision socket",
+   "all": "killed"
+  },
+  {
+   "id": "sv-dryrun",
+   "file": "io/serve.py",
+   "rule": "only gated packets sent",
+   "all": "killed"
+  },
+  {
+   "id": "so-partial",
+   "file": "io/sockets.py",
+   "rule": "partial write completed before next packet",
+   "all": "killed"
+  },
+  {
+   "id": "so-size",
+   "file": "io/sockets.py",
+   "rule": "112-byte payload enforced",
+   "all": "killed"
+  },
+  {
+   "id": "so-drain",
+   "file": "io/sockets.py",
+   "rule": "vision backlog drained",
+   "all": "killed"
+  },
+  {
+   "id": "rv-estop-hold-2s",
+   "file": "config.py",
+   "rule": "E-stop hold 0.2 s",
+   "all": "killed"
+  },
+  {
+   "id": "rv-estop-never-out",
+   "file": "blocks.py",
+   "rule": "E-stop reaches the triggers",
+   "all": "killed"
+  },
+  {
+   "id": "rv-issue-5-axes",
+   "file": "blocks.py",
+   "rule": "issue needs all six axes at -1",
+   "all": "killed"
+  },
+  {
+   "id": "rv-takeoff-not-gated",
+   "file": "blocks.py",
+   "rule": "takeoff masked by joystick issue",
+   "all": "survived"
+  },
+  {
+   "id": "rv-issue-threshold-2s",
+   "file": "config.py",
+   "rule": "joystick issue after 0.2 s",
+   "all": "killed"
+  },
+  {
+   "id": "rv-jg-stale-10x",
+   "file": "safety.py",
+   "rule": "joystick stale window",
+   "all": "killed"
+  },
+  {
+   "id": "rv-jg-malformed-keeps-last",
+   "file": "safety.py",
+   "rule": "malformed joystick forgets last good",
+   "all": "killed"
+  },
+  {
+   "id": "rv-pg-stale-10x",
+   "file": "safety.py",
+   "rule": "pose stale window",
+   "all": "killed"
+  },
+  {
+   "id": "rv-pg-tracking-forced",
+   "file": "safety.py",
+   "rule": "Motive tracking flag kept",
+   "all": "killed"
+  },
+  {
+   "id": "rv-vg-age-ignored",
+   "file": "safety.py",
+   "rule": "detection age used",
+   "all": "killed"
+  },
+  {
+   "id": "rv-vg-stale-2x",
+   "file": "safety.py",
+   "rule": "vision stale 0.5 s",
+   "all": "killed"
+  },
+  {
+   "id": "rv-vg-future-2x",
+   "file": "safety.py",
+   "rule": "future tolerance 50 ms",
+   "all": "killed"
+  },
+  {
+   "id": "rv-vg-frac-frame",
+   "file": "safety.py",
+   "rule": "fractional frame refused",
+   "all": "killed"
+  },
+  {
+   "id": "rv-og-step-10x",
+   "file": "safety.py",
+   "rule": "centring step 5 mm",
+   "all": "killed"
+  },
+  {
+   "id": "rv-og-disp-off",
+   "file": "safety.py",
+   "rule": "0.5 m displacement limit",
+   "all": "killed"
+  },
+  {
+   "id": "rv-og-none-tracking",
+   "file": "safety.py",
+   "rule": "nothing valid yet -> tracking 0",
+   "all": "killed"
+  },
+  {
+   "id": "rv-og-meas-none-tracking",
+   "file": "safety.py",
+   "rule": "no measured pose yet -> tracking 0",
+   "all": "survived"
+  },
+  {
+   "id": "rv-rt-nonfinite-check",
+   "file": "runtime.py",
+   "rule": "runtime re-checks finiteness",
+   "all": "survived"
+  },
+  {
+   "id": "rv-sv-maxlag-100x",
+   "file": "io/serve.py",
+   "rule": "overrun limit",
+   "all": "killed"
+  },
+  {
+   "id": "rv-so-state-always-2",
+   "file": "io/sockets.py",
+   "rule": "state 0 without a client",
+   "all": "killed"
+  },
+  {
+   "id": "rv-og-arbiter-fault-off",
+   "file": "safety.py",
+   "rule": "arbiter tampering flagged",
+   "all": "killed"
+  },
+  {
+   "id": "og-entry-jump",
+   "file": "safety.py",
+   "rule": "jump on centring entry refused",
+   "all": "killed"
+  },
+  {
+   "id": "og-origin-refused",
+   "file": "safety.py",
+   "rule": "refused entry pose is not the origin",
+   "all": "killed"
+  },
+  {
+   "id": "og-late-origin",
+   "file": "safety.py",
+   "rule": "first accepted centring pose becomes the origin",
+   "all": "killed"
+  },
+  {
+   "id": "og-anchor-sent",
+   "file": "safety.py",
+   "rule": "centring entry anchored on the measured pose, not the last sent one",
+   "all": "killed"
+  },
+  {
+   "id": "og-anchor-untracked",
+   "file": "safety.py",
+   "rule": "measured pose used only while tracking",
+   "all": "killed"
+  },
+  {
+   "id": "og-step-reanchor",
+   "file": "safety.py",
+   "rule": "step limit not bypassed by re-anchoring after a refusal",
+   "all": "killed"
+  },
+  {
+   "id": "og-no-escalation",
+   "file": "safety.py",
+   "rule": "persistent centring refusals escalate",
+   "all": "killed"
+  },
+  {
+   "id": "og-escalation-reset",
+   "file": "safety.py",
+   "rule": "accepted pose resets the refusal timer",
+   "all": "killed"
+  },
+  {
+   "id": "og-escalate-10x",
+   "file": "safety.py",
+   "rule": "escalation after 2 s",
+   "all": "killed"
+  },
+  {
+   "id": "og-fault-latch",
+   "file": "safety.py",
+   "rule": "centring fault latched until centring ends",
+   "all": "killed"
+  },
+  {
+   "id": "og-fault-never-clears",
+   "file": "safety.py",
+   "rule": "centring fault cleared when centring ends",
+   "all": "killed"
+  },
+  {
+   "id": "og-refused-status-not-reset",
+   "file": "safety.py",
+   "rule": "accepted pose returns the status to ok",
+   "all": "killed"
+  },
+  {
+   "id": "og-refusal-count",
+   "file": "safety.py",
+   "rule": "refused centring ticks counted",
+   "all": "killed"
+  },
+  {
+   "id": "og-land-interrupted",
+   "file": "safety.py",
+   "rule": "a LAND already applied is never interrupted (trigger 2 stays lowered)",
+   "all": "killed"
+  },
+  {
+   "id": "og-new-land-while-refused",
+   "file": "safety.py",
+   "rule": "no new autonomous LAND unless the gate status is ok",
+   "all": "killed"
+  },
+  {
+   "id": "og-land-active-latch",
+   "file": "safety.py",
+   "rule": "LAND state follows the arbiter",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-stale",
+   "file": "safety.py",
+   "rule": "refusal holds the validated hold, not the last accepted pose",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-recapture",
+   "file": "safety.py",
+   "rule": "entry hold captured once",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-kept-across-phases",
+   "file": "safety.py",
+   "rule": "entry hold cleared when centring ends",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-z-measured",
+   "file": "safety.py",
+   "rule": "hold keeps the last accepted height",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-teleport",
+   "file": "safety.py",
+   "rule": "measured xy further than 0.1 m from the previous sample is not trusted",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-outside-area",
+   "file": "safety.py",
+   "rule": "measured xy outside the flight area is not trusted",
+   "all": "killed"
+  },
+  {
+   "id": "og-vehicle-no-fallback",
+   "file": "safety.py",
+   "rule": "vehicle position falls back to the last accepted pose",
+   "all": "killed"
+  },
+  {
+   "id": "og-entry-tol-4x",
+   "file": "safety.py",
+   "rule": "entry jump limit 0.5 m",
+   "all": "killed"
+  },
+  {
+   "id": "og-origin-untracked",
+   "file": "safety.py",
+   "rule": "centring origin never from an untracked pose",
+   "all": "killed"
+  },
+  {
+   "id": "og-disp-after-refusal",
+   "file": "safety.py",
+   "rule": "displacement limit also on the tick after a refusal",
+   "all": "killed"
+  },
+  {
+   "id": "og-disp-during-entry",
+   "file": "safety.py",
+   "rule": "displacement limit also while the entry is refused",
+   "all": "killed"
+  },
+  {
+   "id": "og-disp-off",
+   "file": "safety.py",
+   "rule": "displacement limit",
+   "all": "killed"
+  },
+  {
+   "id": "og-land-overrides-disarm",
+   "file": "safety.py",
+   "rule": "disarming mid-LAND releases Takeoff/Land",
+   "all": "killed"
+  },
+  {
+   "id": "og-centring-last-not-reset",
+   "file": "safety.py",
+   "rule": "last accepted centring pose reset when centring ends",
+   "all": "killed"
+  },
+  {
+   "id": "og-hold-not-clamped",
+   "file": "safety.py",
+   "rule": "hold command clamped to the flight area",
+   "all": "killed"
+  },
+  {
+   "id": "sv-refusals-stale",
+   "file": "io/serve.py",
+   "rule": "refusal counter copied to ServeStats",
+   "all": "killed"
+  },
+  {
+   "id": "sv-gate-status-hidden",
+   "file": "io/serve.py",
+   "rule": "gate status exposed in ServeStats",
+   "all": "killed"
+  },
+  {
+   "id": "sv-input-failstop",
+   "file": "io/serve.py",
+   "rule": "input exceptions fail-stop",
+   "all": "killed"
+  },
+  {
+   "id": "sv-no-busy-spin",
+   "file": "io/serve.py",
+   "rule": "hybrid sleep",
+   "all": "killed"
+  }
+ ]
+}

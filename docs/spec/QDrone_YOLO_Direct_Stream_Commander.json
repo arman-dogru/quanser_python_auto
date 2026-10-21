@@ -1,0 +1,1604 @@
+{
+ "model": "simulink/QDrone_YOLO_Direct_Stream_Commander.mdl",
+ "sha256": "470da156d26d0a2991876af2501b45f7c4dc09f65279009ad3b0b03ce6dc4ce9",
+ "solver": {
+  "config_sets": {
+   "simulink/configSet0.xml": {
+    "name": "Linux64 Configuration",
+    "StartTime": "0.0",
+    "StopTime": "inf",
+    "FixedStep": "0.001",
+    "EnableMultiTasking": "on",
+    "SolverName": "ode1",
+    "SampleTimeConstraint": "Unconstrained",
+    "SystemTargetFile": "quarc_linux_x64.tlc",
+    "ExtModeMexArgs": " '-w -d /tmp -uri %u -URI_Host tcpip://192.168.2.11:18001','tcpip://192.168.2.16:17001?retries=10'"
+   },
+   "simulink/configSet1.xml": {
+    "name": "Linux x64 Configuration",
+    "StartTime": "0.0",
+    "StopTime": "inf",
+    "FixedStep": "0.02",
+    "EnableMultiTasking": "on",
+    "SolverName": "ode1",
+    "SampleTimeConstraint": "Unconstrained",
+    "SystemTargetFile": "quarc_linux_x64.tlc",
+    "ExtModeMexArgs": "'-w -d /tmp -uri %u'"
+   }
+  },
+  "active_config_set": {
+   "part": "simulink/configSet0.xml",
+   "name": "Linux64 Configuration"
+  }
+ },
+ "model_arguments": {
+  "URI_Host": "tcpip://192.168.2.11:18001','tcpip://192.168.2.16:17001?retries=10"
+ },
+ "endpoints": [
+  {
+   "block": "Communication/Model Argument",
+   "param": "argument_name",
+   "model_argument": "URI_Host",
+   "uri": "tcpip://192.168.2.11:18001','tcpip://192.168.2.16:17001?retries=10",
+   "used": true,
+   "source": "ExtModeMexArgs"
+  },
+  {
+   "block": "Communication/Stream Client",
+   "param": "uri",
+   "uri": "tcpip://192.168.2.3:18669",
+   "used": false,
+   "note": "uri_source = External input port; the dialog URI is ignored"
+  },
+  {
+   "block": "Direct Grayscale TCP Stream",
+   "param": "uri",
+   "uri": "tcpip://192.168.2.11:18910",
+   "used": true
+  }
+ ],
+ "sample_times": [
+  {
+   "block": "Camera Network Rate 5 Hz",
+   "param": "OutPortSampleTime",
+   "value": "0.2"
+  },
+  {
+   "block": "Communication/Stream Client",
+   "param": "sample_time",
+   "value": "qc_get_step_size"
+  },
+  {
+   "block": "Direct Grayscale TCP Stream",
+   "param": "sample_time",
+   "value": "0.2"
+  },
+  {
+   "block": "Downward Grayscale Camera Capture",
+   "param": "sample_time",
+   "value": "qc_get_step_size * ceil(1/30 / qc_get_step_size)"
+  },
+  {
+   "block": "Enable Camera Stream",
+   "param": "SampleTime",
+   "value": "0.2"
+  },
+  {
+   "block": "PHYSICAL PLANT w/ LINEAR THRUST/Battery Level,  Accelrometer and  Gyroscope",
+   "param": "sample_time",
+   "value": "qc_get_step_size"
+  },
+  {
+   "block": "STABILIZER - QDRONE /FLIGHT SAFETY/Computation Time",
+   "param": "sample_time",
+   "value": "qc_get_step_size"
+  },
+  {
+   "block": "STABILIZER - QDRONE /FLIGHT SAFETY/HIL Watchdog",
+   "param": "sample_time",
+   "value": "qc_get_step_size"
+  },
+  {
+   "block": "STABILIZER - QDRONE /FLIGHT SAFETY/Sample Time",
+   "param": "sample_time",
+   "value": "qc_get_step_size"
+  }
+ ],
+ "constants": [
+  {
+   "block": "COMMANDER (ANGLE MODE)/Constant2",
+   "value": "[0 0 1 0; 0 -1 0 0; 1 0 0 0; 0 0 0 1]",
+   "explicit": true
+  },
+  {
+   "block": "COMMANDER (ANGLE MODE)/Specify Angle Mode for Stabilizer (DO NOT CHANGE)",
+   "value": "0",
+   "explicit": true
+  },
+  {
+   "block": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Constant1",
+   "value": "0",
+   "explicit": true
+  },
+  {
+   "block": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Constant2",
+   "value": "[2.33 46600]",
+   "explicit": true
+  },
+  {
+   "block": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Constant3",
+   "value": "[1.7475 0.17475]",
+   "explicit": true
+  },
+  {
+   "block": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Constant4",
+   "value": "0",
+   "explicit": true
+  },
+  {
+   "block": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Constant5",
+   "value": "0",
+   "explicit": true
+  },
+  {
+   "block": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Null Attitude Command (rad, rad, rad/s)",
+   "value": "[0 0 0]",
+   "explicit": true
+  },
+  {
+   "block": "COMMANDER (ANGLE MODE)/Trim Throttle (N) ",
+   "value": "11",
+   "explicit": true
+  },
+  {
+   "block": "Communication/Constant",
+   "value": "1",
+   "explicit": false
+  },
+  {
+   "block": "Constant",
+   "value": "0",
+   "explicit": true
+  },
+  {
+   "block": "Enable Camera Stream",
+   "value": "true",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/Constant",
+   "value": "0",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant1",
+   "value": "Inf",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant2",
+   "value": "[2 0.2]",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant3",
+   "value": "[3 10]",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant4",
+   "value": "[3 4.5]",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant5",
+   "value": "[2 10]",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant6",
+   "value": "[2 0.5]",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant7",
+   "value": "[2 2]",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant8",
+   "value": "[2 10]",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant9",
+   "value": "[2 0.2]",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/Position Safety Threshold (m) [3]",
+   "value": "[2 2 2]",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/wn",
+   "value": "50",
+   "explicit": true
+  },
+  {
+   "block": "HORIZON FRAME CONVERSION AND ESTIMATION/zt",
+   "value": "1",
+   "explicit": false
+  },
+  {
+   "block": "PHYSICAL PLANT w/ LINEAR THRUST/Constant",
+   "value": "120",
+   "explicit": true
+  },
+  {
+   "block": "PHYSICAL PLANT w/ LINEAR THRUST/Constant1",
+   "value": "[ 0.0489   -0.4581    0.5566    5.1335;\n  0.0489   -0.4581   -0.5566   -5.1335;\n  0.0489    0.4581    0.5566   -5.1335;\n  0.0489    0.4581   -0.5566    5.1335]",
+   "explicit": true
+  },
+  {
+   "block": "PHYSICAL PLANT w/ LINEAR THRUST/Constant10",
+   "value": "1",
+   "explicit": false
+  },
+  {
+   "block": "PHYSICAL PLANT w/ LINEAR THRUST/Constant2",
+   "value": "1",
+   "explicit": false
+  },
+  {
+   "block": "PHYSICAL PLANT w/ LINEAR THRUST/Constant9",
+   "value": "100",
+   "explicit": true
+  },
+  {
+   "block": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed/Blue",
+   "value": "[0 0 1]",
+   "explicit": true
+  },
+  {
+   "block": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed/Green",
+   "value": "[0 1 0]",
+   "explicit": true
+  },
+  {
+   "block": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed/Red",
+   "value": "[1 0 0]",
+   "explicit": true
+  },
+  {
+   "block": "STABILIZER - QDRONE /Zero Torque/Command",
+   "value": "[0 0 0]",
+   "explicit": true
+  },
+  {
+   "block": "zero reference torque commands",
+   "value": "[0 0 0]",
+   "explicit": true
+  }
+ ],
+ "charts": [
+  {
+   "member": "simulink/stateflow/chart_47.xml",
+   "chart_id": "47",
+   "instance_path": "PHYSICAL PLANT w/ LINEAR THRUST/roll and pitch approximation  from accelerometer",
+   "function": "fcn",
+   "signature": "function [roll_acc, pitch_acc]   = fcn(acc_body)",
+   "data": [
+    {
+     "name": "roll_acc",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pitch_acc",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "acc_body",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "a5f25274f3d90636359d8213504f37e27fae4aab128ef2687406642e16216f65",
+   "has_persistent_state": false,
+   "script_file": "QDrone_YOLO_Direct_Stream_Commander/charts/chart_47_roll_and_pitch_approximation_from_accelerometer.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_55.xml",
+   "chart_id": "55",
+   "instance_path": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Throttle Switchbox",
+   "function": "application_drone_throttle_switchbox",
+   "signature": "function sigmoid  = application_drone_throttle_switchbox(FSM_state)",
+   "data": [
+    {
+     "name": "FSM_state",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "sigmoid",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "af2153d93e21a6601aaa779540c3670e52fd38bb9473a3f116b1dd049f448793",
+   "has_persistent_state": false,
+   "script_file": "QDrone_YOLO_Direct_Stream_Commander/charts/chart_55_Throttle_Switchbox.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_62.xml",
+   "chart_id": "62",
+   "instance_path": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function",
+   "function": "fcn",
+   "signature": "function [enable, x_ref, max_x_vel, max_x_accel] = fcn(sigmoid_type, x_des, slow_lim, fast_lim, x_cur, x_vel, x_meas)",
+   "data": [
+    {
+     "name": "sigmoid_type",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "enable",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "x_des",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "slow_lim",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "fast_lim",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "x_cur",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "x_vel",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "x_ref",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "max_x_vel",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "max_x_accel",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "x_meas",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "9d642d390ec3c7fa355a9cd88f238d9e0a59b464a5b5074026c4878c9f6ce221",
+   "has_persistent_state": false,
+   "script_file": "QDrone_YOLO_Direct_Stream_Commander/charts/chart_62_MATLAB_Function.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_78.xml",
+   "chart_id": "78",
+   "instance_path": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function1",
+   "function": "fcn",
+   "signature": "function [enable, y_ref, max_y_vel, max_y_accel] = fcn(sigmoid_type, y_des, slow_lim, fast_lim, y_cur, y_vel, y_meas)",
+   "data": [
+    {
+     "name": "sigmoid_type",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "enable",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "y_des",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "slow_lim",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "fast_lim",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "y_cur",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "y_vel",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "y_ref",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "max_y_vel",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "max_y_accel",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "y_meas",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "b612218640f375cd222bdc0b26d0fce4ed1e58ec77dccc9bb2e327d45440290d",
+   "has_persistent_state": false,
+   "script_file": "QDrone_YOLO_Direct_Stream_Commander/charts/chart_78_MATLAB_Function1.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_94.xml",
+   "chart_id": "94",
+   "instance_path": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function2",
+   "function": "fcn",
+   "signature": "function [enable, height_ref, max_height_vel, max_height_accel] = fcn(sigmoid_type, height_des, slow_lim, fast_lim, height_cur, height_vel)",
+   "data": [
+    {
+     "name": "sigmoid_type",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "enable",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "height_des",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "slow_lim",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "fast_lim",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "height_cur",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "height_vel",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "height_ref",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "max_height_vel",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "max_height_accel",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "7986a277c5161ad227e6c04a3706ee521f93c9967821b544377a3ebecc7bbe91",
+   "has_persistent_state": false,
+   "script_file": "QDrone_YOLO_Direct_Stream_Commander/charts/chart_94_MATLAB_Function2.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_109.xml",
+   "chart_id": "109",
+   "instance_path": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function4",
+   "function": "fcn",
+   "signature": "function [enable, yaw_ref, max_yaw_vel, max_yaw_accel] = fcn(sigmoid_type, yaw_des, slow_lim, fast_lim, yaw_cur, yaw_vel)",
+   "data": [
+    {
+     "name": "sigmoid_type",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "enable",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "yaw_des",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "slow_lim",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "fast_lim",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "yaw_cur",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "yaw_ref",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "max_yaw_vel",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "max_yaw_accel",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "yaw_vel",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "ca02c5e9ef38f3885d494e8807ba19962dba066fa90053ab5d957cb2050c7b86",
+   "has_persistent_state": false,
+   "script_file": "QDrone_YOLO_Direct_Stream_Commander/charts/chart_109_MATLAB_Function4.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_124.xml",
+   "chart_id": "124",
+   "instance_path": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Signmoid Type",
+   "function": "sigmoid_type_position",
+   "signature": "function sigmoid_type  = sigmoid_type_position(FSM_state)",
+   "data": [
+    {
+     "name": "FSM_state",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "sigmoid_type",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "ff9aeef557cff76e8088923ead459baeba3911d12fdb0e8491a52ddf3b7fb6d9",
+   "has_persistent_state": false,
+   "script_file": "QDrone_YOLO_Direct_Stream_Commander/charts/chart_124_Signmoid_Type.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_131.xml",
+   "chart_id": "131",
+   "instance_path": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Hover Throttle Sigmoid Parameters",
+   "function": "fcn",
+   "signature": "function [enable, throttle_ref, max_throttle_vel, max_throttle_accel] = fcn(sigmoid_type, trim_throttle, takeoff_lim, land_lim, throttle_vel)",
+   "data": [
+    {
+     "name": "sigmoid_type",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "enable",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "trim_throttle",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "takeoff_lim",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "land_lim",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "throttle_vel",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "throttle_ref",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "max_throttle_vel",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "max_throttle_accel",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "2ad5a505f12cdcb8d4672218c9246502b227a1e4b56b5c2a29592b01bf596690",
+   "has_persistent_state": false,
+   "script_file": "QDrone_YOLO_Direct_Stream_Commander/charts/chart_131_Hover_Throttle_Sigmoid_Parameters.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_145.xml",
+   "chart_id": "145",
+   "instance_path": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC",
+   "function": null,
+   "signature": null,
+   "data": [
+    {
+     "name": "E_Abort",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "isArm",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_ARM_to_TAKEOFF_THROTTLE",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_TAKE_OFF_HEIGHT_TO_AUTOLAND",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_FLIGHT_TO_AUTOLAND",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "current_state",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "initializing",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "Tracking_Issue",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "Communication_Issue",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "low_battery",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "trigger_1",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "trigger_2",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "E_abort",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "joystick_issue",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "net_throttle_at_trim",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "net_throttle_close_to_zero",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "ctrl_throttle_close_to_zero",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "take_off_successful",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "flying_too_low",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "flying_too_high",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "close_to_ground",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_TAKEOFF_THROTTLE_TO_TAKEOFF_HEIGHT",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_TAKE_OFF_HEIGHT_TO_FLIGHT",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_AUTOLAND_TO_DISABLE",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_EMERGENCY_STOP_TO_DISABLE",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_EMERGENCY_ABORT_TO_DISABLE",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "Error",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "stop_model",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "sensor_failed",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "b7c188f576e1f986a0f5fe20aa4ef15a3a3de125f558eadb7e1ee3d587377c2c",
+   "has_persistent_state": false,
+   "script_file": "QDrone_YOLO_Direct_Stream_Commander/charts/chart_145_STATE_MACHINE_LOGIC.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_179.xml",
+   "chart_id": "179",
+   "instance_path": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed/MATLAB Function LED Color Assignment",
+   "function": "fcn",
+   "signature": "function value = fcn(arm, low_battery)",
+   "data": [
+    {
+     "name": "arm",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "value",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "low_battery",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "85fd1b8e151d3d8400d2ce615251563a2e0c58ade06f110baef984d61ad23816",
+   "has_persistent_state": false,
+   "script_file": "QDrone_YOLO_Direct_Stream_Commander/charts/chart_179_MATLAB_Function_LED_Color_Assignment.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_187.xml",
+   "chart_id": "187",
+   "instance_path": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION",
+   "function": "SM_transition",
+   "signature": "function Next_state = SM_transition(current_state, E_Abort, isArm, pt_ARM_to_TAKEOFF_THROTTLE, pt_TAKE_OFF_HEIGHT_TO_AUTOLAND, pt_FLIGHT_TO_AUTOLAND, pt_TAKEOFF_THROTTLE_TO_TAKEOFF_HEIGHT, pt_TAKE_OFF_HEIGHT_TO_FLIGHT, pt_AUTOLAND_TO_DISABLE, pt_EMERGENCY_STOP_TO_DISABLE, pt_EMERGENCY_ABORT_TO_DISABLE, Error)",
+   "data": [
+    {
+     "name": "current_state",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "E_Abort",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "isArm",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_ARM_to_TAKEOFF_THROTTLE",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_TAKE_OFF_HEIGHT_TO_AUTOLAND",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_FLIGHT_TO_AUTOLAND",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "Next_state",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_TAKEOFF_THROTTLE_TO_TAKEOFF_HEIGHT",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_TAKE_OFF_HEIGHT_TO_FLIGHT",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_AUTOLAND_TO_DISABLE",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_EMERGENCY_STOP_TO_DISABLE",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pt_EMERGENCY_ABORT_TO_DISABLE",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "Error",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "eeb0c0123ef2143b5171f8dca57c5593fcd3fc47430af2328949b5e9aab1dc36",
+   "has_persistent_state": false,
+   "script_file": "QDrone_YOLO_Direct_Stream_Commander/charts/chart_187_STATE_MACHINE_TRANSITION.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_205.xml",
+   "chart_id": "205",
+   "instance_path": "Communication/Detect Communication Loss/MATLAB Function",
+   "function": "fcn",
+   "signature": "function [stream_connection_loss , data_loss] = fcn(time, state, error, ms_time)",
+   "data": [
+    {
+     "name": "time",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "stream_connection_loss",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "state",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "error",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "ms_time",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "data_loss",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "058b6b6982405feba568c40fa3d253882177b0e0acb5ab86a8398d0b117d8b02",
+   "has_persistent_state": true,
+   "script_file": "QDrone_YOLO_Direct_Stream_Commander/charts/chart_205_MATLAB_Function.m"
+  }
+ ],
+ "stream_blocks": {
+  "Communication/Stream Client": {
+   "Ports": "[3, 5]",
+   "SourceBlock": "quarc_library/Communications/Basic/Stream Client",
+   "active": "off",
+   "byte_order": "little endian (Intel - LSB first)",
+   "data_type": "Inherited via back propagation",
+   "default_value": "zeros(1,14)",
+   "implementation": "Use blocking I/O in a separate thread",
+   "max_dimensions": "-1",
+   "optimization": "Minimum latency",
+   "receive_buffer_size": "1460",
+   "receive_dimensions": "off",
+   "receive_fifo_size": "1000",
+   "receive_options": "Receive most recent data",
+   "receive_priority": "0",
+   "sample_time": "qc_get_step_size",
+   "send_buffer_size": "1460",
+   "send_dimensions": "off",
+   "send_fifo_size": "1000",
+   "send_options": "Send most recent data",
+   "send_priority": "0",
+   "type_expr": "BusObject",
+   "uri": "tcpip://192.168.2.3:18669",
+   "uri_source": "External input port"
+  },
+  "Direct Grayscale TCP Stream": {
+   "Ports": "[2, 3]",
+   "SourceBlock": "quarc_library/Communications/Basic/Stream Client",
+   "active": "off",
+   "byte_order": "little endian (Intel - LSB first)",
+   "data_type": "Inherited via back propagation",
+   "default_value": "[0]",
+   "implementation": "Use blocking I/O in a separate thread",
+   "max_dimensions": "-1",
+   "optimization": "Minimum latency",
+   "receive_buffer_size": "1460",
+   "receive_dimensions": "off",
+   "receive_fifo_size": "1000",
+   "receive_options": "Do not receive data",
+   "receive_priority": "0",
+   "sample_time": "0.2",
+   "send_buffer_size": "1048576",
+   "send_dimensions": "off",
+   "send_fifo_size": "1",
+   "send_options": "Send most recent data",
+   "send_priority": "0",
+   "type_expr": "BusObject",
+   "uri": "tcpip://192.168.2.11:18910",
+   "uri_source": "Specify via dialog (do not evaluate)"
+  }
+ },
+ "wiring": [
+  {
+   "system": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX ",
+   "src": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /FSM State (0-9)#out:1",
+   "dst": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Throttle Switchbox#in:1"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX ",
+   "src": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Continuous Sigmoid#out:2",
+   "dst": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Hover Throttle Sigmoid Parameters#in:5"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX ",
+   "src": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Constant3#out:1",
+   "dst": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Hover Throttle Sigmoid Parameters#in:4"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX ",
+   "src": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Trim throttle (N) [1]#out:1",
+   "dst": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Hover Throttle Sigmoid Parameters#in:2",
+   "name": "Trim Throttle"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX ",
+   "src": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Throttle Switchbox#out:1",
+   "dst": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Hover Throttle Sigmoid Parameters#in:1"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX ",
+   "src": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Constant2#out:1",
+   "dst": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Hover Throttle Sigmoid Parameters#in:3"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX ",
+   "src": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Hover Throttle Sigmoid Parameters#out:4",
+   "dst": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Continuous Sigmoid#in:3"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX ",
+   "src": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Hover Throttle Sigmoid Parameters#out:3",
+   "dst": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Continuous Sigmoid#in:2"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX ",
+   "src": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Hover Throttle Sigmoid Parameters#out:1",
+   "dst": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Data Type Conversion1#in:1"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX ",
+   "src": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Hover Throttle Sigmoid Parameters#out:1",
+   "dst": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Use desired height when enabled#enable"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX ",
+   "src": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Hover Throttle Sigmoid Parameters#out:2",
+   "dst": "COMMANDER (ANGLE MODE)/THROTTLE SWITCHBOX /Use desired height when enabled#in:1"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/Memory#out:1",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#in:1"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:1",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:1"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:3",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#in:4"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:5",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:5"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:8",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:8"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:11",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:11"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:16",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:16"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:6",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#in:7"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:12",
+   "dst": "COMMANDER (ANGLE MODE)/Data Type Conversion3#in:1"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:13",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:13"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:7",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:7"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#out:1",
+   "dst": "COMMANDER (ANGLE MODE)/Data Type Conversion5#in:1"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#out:1",
+   "dst": "COMMANDER (ANGLE MODE)/Data Type Conversion4#in:1"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:4",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:4"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:9",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#in:10"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:5",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#in:6"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:1",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#in:2"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:9",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:9"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:12",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:12"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:14",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:14"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:15",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:15"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:10",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:10"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:3",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:3"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:2",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:2"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:2",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#in:3"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:4",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#in:5"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:6",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:6"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:7",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#in:8"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:10",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#in:11"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:8",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#in:9"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE SIGNALS#out:17",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#in:17"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:11",
+   "dst": "COMMANDER (ANGLE MODE)/STATE MACHINE TRANSITION#in:12"
+  },
+  {
+   "system": "COMMANDER (ANGLE MODE)",
+   "src": "COMMANDER (ANGLE MODE)/STATE MACHINE LOGIC#out:11",
+   "dst": "COMMANDER (ANGLE MODE)/Data Type Conversion2#in:1"
+  },
+  {
+   "system": "Communication/Detect Communication Loss",
+   "src": "Communication/Detect Communication Loss/MATLAB Function#out:2",
+   "dst": "Communication/Detect Communication Loss/Threshold2#in:1"
+  },
+  {
+   "system": "Communication/Detect Communication Loss",
+   "src": "Communication/Detect Communication Loss/MATLAB Function#out:1",
+   "dst": "Communication/Detect Communication Loss/Threshold1#in:1"
+  },
+  {
+   "system": "Communication/Detect Communication Loss",
+   "src": "Communication/Detect Communication Loss/Clock1#out:1",
+   "dst": "Communication/Detect Communication Loss/MATLAB Function#in:1"
+  },
+  {
+   "system": "Communication/Detect Communication Loss",
+   "src": "Communication/Detect Communication Loss/Grab mission server time to detect flat lines#out:1",
+   "dst": "Communication/Detect Communication Loss/MATLAB Function#in:4"
+  },
+  {
+   "system": "Communication/Detect Communication Loss",
+   "src": "Communication/Detect Communication Loss/State#out:1",
+   "dst": "Communication/Detect Communication Loss/MATLAB Function#in:2"
+  },
+  {
+   "system": "Communication/Detect Communication Loss",
+   "src": "Communication/Detect Communication Loss/Error#out:1",
+   "dst": "Communication/Detect Communication Loss/MATLAB Function#in:3"
+  },
+  {
+   "system": "Communication",
+   "src": "Communication/Stream Client#out:5",
+   "dst": "Communication/Terminator2#in:1"
+  },
+  {
+   "system": "Communication",
+   "src": "Communication/Model Argument#out:1",
+   "dst": "Communication/Stream Client#in:3"
+  },
+  {
+   "system": "Communication",
+   "src": "Communication/Constant#out:1",
+   "dst": "Communication/Stream Client#in:2"
+  },
+  {
+   "system": "Communication",
+   "src": "Communication/Stream Client#out:3",
+   "dst": "Communication/Terminator1#in:1"
+  },
+  {
+   "system": "Communication",
+   "src": "Communication/Stream Client#out:4",
+   "dst": "Communication/Detect Communication Loss#in:3"
+  },
+  {
+   "system": "Communication",
+   "src": "Communication/Stream Client#out:4",
+   "dst": "Communication/Select Timestamp received and send  back immediately (for calculating loopback time)#in:1"
+  },
+  {
+   "system": "Communication",
+   "src": "Communication/Stream Client#out:4",
+   "dst": "Communication/Select the rest of the data#in:1"
+  },
+  {
+   "system": "Communication",
+   "src": "Communication/Memory#out:1",
+   "dst": "Communication/Stream Client#in:1"
+  },
+  {
+   "system": "Communication",
+   "src": "Communication/Stream Client#out:1",
+   "dst": "Communication/Detect Communication Loss#in:1"
+  },
+  {
+   "system": "Communication",
+   "src": "Communication/Stream Client#out:2",
+   "dst": "Communication/Detect Communication Loss#in:2"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant4#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function2#in:3"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant3#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function2#in:4"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Demux#out:2",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function1#in:2"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function2#out:3",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid2#in:2"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function4#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Use des yaw  when enabled#enable"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid1#out:2",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function1#in:6"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant2#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function1#in:3"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant6#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function4#in:3"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Demux1#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function#in:7"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function1#out:2",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Use desired Y  when enabled#in:1"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Demux#out:3",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function2#in:2"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant7#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function4#in:4"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function1#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Use desired Y  when enabled#enable"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Signmoid Type#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function#in:1"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Signmoid Type#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function1#in:1"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Signmoid Type#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function2#in:1"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Signmoid Type#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function4#in:1"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function#out:3",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid#in:2"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function2#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Use des height  when enabled#enable"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Constant9#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function#in:3"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid2#out:2",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function2#in:6"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid1#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function1#in:5"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function4#out:4",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid3#in:3"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Demux#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function#in:2"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function1#out:3",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid1#in:2"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid3#out:2",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function4#in:6"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function2#out:2",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Use des height  when enabled#in:1"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function#out:4",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid#in:3"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Demux#out:4",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function4#in:2"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function1#out:4",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid1#in:3"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Use desired X  when enabled#enable"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function4#out:2",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Use des yaw  when enabled#in:1"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/FSM State (0,9)#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Signmoid Type#in:1"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function2#out:4",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid2#in:3"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function#in:5"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid#out:2",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function#in:6"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function#out:2",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Use desired X  when enabled#in:1"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid3#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function4#in:5"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function4#out:3",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid3#in:2"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Continuous Sigmoid2#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function2#in:5"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Demux1#out:2",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function1#in:7"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Gain1#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function1#in:4"
+  },
+  {
+   "system": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox",
+   "src": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/Gain2#out:1",
+   "dst": "HORIZON FRAME CONVERSION AND ESTIMATION/Pose Switchbox/MATLAB Function#in:4"
+  },
+  {
+   "system": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed",
+   "src": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed/Arm (0,1)#out:1",
+   "dst": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed/MATLAB Function LED Color Assignment#in:1"
+  },
+  {
+   "system": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed",
+   "src": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed/MATLAB Function LED Color Assignment#out:1",
+   "dst": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed/Multiport Switch#in:1"
+  },
+  {
+   "system": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed",
+   "src": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed/Low Battery (0,1)#out:1",
+   "dst": "PHYSICAL PLANT w/ LINEAR THRUST/Red - Low Voltage Green - Armed Blue - Disarmed/MATLAB Function LED Color Assignment#in:2"
+  },
+  {
+   "system": "PHYSICAL PLANT w/ LINEAR THRUST",
+   "src": "PHYSICAL PLANT w/ LINEAR THRUST/Second-Order Low-Pass Filter 1#out:1",
+   "dst": "PHYSICAL PLANT w/ LINEAR THRUST/roll and pitch approximation  from accelerometer#in:1"
+  },
+  {
+   "system": "PHYSICAL PLANT w/ LINEAR THRUST",
+   "src": "PHYSICAL PLANT w/ LINEAR THRUST/roll and pitch approximation  from accelerometer#out:1",
+   "dst": "PHYSICAL PLANT w/ LINEAR THRUST/Sum#in:1"
+  },
+  {
+   "system": "PHYSICAL PLANT w/ LINEAR THRUST",
+   "src": "PHYSICAL PLANT w/ LINEAR THRUST/roll and pitch approximation  from accelerometer#out:2",
+   "dst": "PHYSICAL PLANT w/ LINEAR THRUST/Sum2#in:1"
+  },
+  {
+   "system": "<root>",
+   "src": "Camera Network Rate 5 Hz#out:1",
+   "dst": "Direct Grayscale TCP Stream#in:1"
+  },
+  {
+   "system": "<root>",
+   "src": "Enable Camera Stream#out:1",
+   "dst": "Direct Grayscale TCP Stream#in:2"
+  },
+  {
+   "system": "<root>",
+   "src": "Direct Grayscale TCP Stream#out:1",
+   "dst": "Camera Stream Diagnostics#in:1"
+  },
+  {
+   "system": "<root>",
+   "src": "Direct Grayscale TCP Stream#out:2",
+   "dst": "Camera Stream Diagnostics#in:2"
+  },
+  {
+   "system": "<root>",
+   "src": "Direct Grayscale TCP Stream#out:3",
+   "dst": "Camera Stream Diagnostics#in:3"
+  }
+ ],
+ "counts": {
+  "blocks": 757,
+  "lines": 952
+ }
+}

@@ -4,3 +4,8 @@
 *.pt binary
 *.cal -text
 *.tra -text
+
+# Python port: generated files (collapsed in GitHub diffs, excluded from language stats)
+docs/spec/** linguist-generated
+tests/fixtures/** linguist-generated
+docs/figures/data/** linguist-generated
