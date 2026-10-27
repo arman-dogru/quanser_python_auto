@@ -1,0 +1,184 @@
+{
+ "host": "Linux x86_64, Python 3.12.15",
+ "captured": "2026-10-20",
+ "vision": {
+  "frames_sent": [
+   {
+    "index": 1,
+    "kind": "fresh",
+    "bytes": 307200,
+    "img11": 254,
+    "img21": 193,
+    "img12": 227,
+    "wire1": 254,
+    "wire2": 193
+   },
+   {
+    "index": 2,
+    "kind": "fresh",
+    "bytes": 307200,
+    "img11": 182,
+    "img21": 115,
+    "img12": 243,
+    "wire1": 182,
+    "wire2": 115
+   },
+   {
+    "index": 3,
+    "kind": "fresh",
+    "bytes": 307200,
+    "img11": 232,
+    "img21": 254,
+    "img12": 16,
+    "wire1": 232,
+    "wire2": 254
+   },
+   {
+    "index": 4,
+    "kind": "fresh",
+    "bytes": 307200,
+    "img11": 44,
+    "img21": 60,
+    "img12": 174,
+    "wire1": 44,
+    "wire2": 60
+   },
+   {
+    "index": 5,
+    "kind": "frozen (first copy)",
+    "bytes": 307200,
+    "img11": 54,
+    "img21": 100,
+    "img12": 51,
+    "wire1": 54,
+    "wire2": 100
+   },
+   {
+    "index": 6,
+    "kind": "frozen (repeat)",
+    "bytes": 307200,
+    "img11": 54,
+    "img21": 100,
+    "img12": 51,
+    "wire1": 54,
+    "wire2": 100
+   },
+   {
+    "index": 7,
+    "kind": "frozen (repeat)",
+    "bytes": 307200,
+    "img11": 54,
+    "img21": 100,
+    "img12": 51,
+    "wire1": 54,
+    "wire2": 100
+   },
+   {
+    "index": 8,
+    "kind": "frozen (repeat)",
+    "bytes": 307200,
+    "img11": 54,
+    "img21": 100,
+    "img12": 51,
+    "wire1": 54,
+    "wire2": 100
+   }
+  ],
+  "observations": [
+   {
+    "after_sent": 1,
+    "hex": "0000000000000000000000000000000000000000000000000000000000000000000000000000f03f2cb3fc4e07b6da41",
+    "fields": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0,
+     1792548155.9484358
+    ]
+   },
+   {
+    "after_sent": 2,
+    "hex": "0000000000000000000000000000000000000000000000000000000000000000000000000000004059faff4e07b6da41",
+    "fields": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     2.0,
+     1792548155.999655
+    ]
+   },
+   {
+    "after_sent": 3,
+    "hex": "00000000000000000000000000000000000000000000000000000000000000000000000000000840a7c4014f07b6da41",
+    "fields": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     3.0,
+     1792548156.0276277
+    ]
+   },
+   {
+    "after_sent": 4,
+    "hex": "0000000000000000000000000000000000000000000000000000000000000000000000000000104008d1034f07b6da41",
+    "fields": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     4.0,
+     1792548156.0596333
+    ]
+   },
+   {
+    "after_sent": 5,
+    "hex": "000000000000000000000000000000000000000000000000000000000000000000000000000014406929224f07b6da41",
+    "fields": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     5.0,
+     1792548156.5337775
+    ]
+   }
+  ],
+  "publisher_stale_lines": [
+   "CAMERA STALE: raw frame repeated 1 times; no detection sent"
+  ],
+  "frame_layout": "column-major (MATLAB HxW): wire byte 1 is image(1,1), wire byte 2 is image(2,1)"
+ },
+ "loopback": {
+  "ticks": 8062,
+  "sent": 8062,
+  "send_dropped": 0,
+  "commander_records": 8062,
+  "commander_packets": 7286,
+  "command_hex": "000000000000f03f000000000000000000000000000000000000000000000000000000000000f03f0000000000000000cdccccccccccecbf000000000000000000000000000000000000000000000000cdccccccccccecbf666666666666e63f000000000000000062a6375207b6da41",
+  "command_fields": {
+   "arm": 1.0,
+   "takeoff/land": 0.0,
+   "e-stop": 0.0,
+   "joystick issue": 0.0,
+   "isTracking": 1.0,
+   "measured x": 0.0,
+   "measured y": -0.9,
+   "measured z": 0.0,
+   "measured yaw": 0.0,
+   "desired x": 0.0,
+   "desired y": -0.9,
+   "desired z": 0.7,
+   "desired yaw": 0.0,
+   "timestamp": 1792548168.8695302
+  },
+  "echo_hex": "9295375207b6da41",
+  "echo_value": 1792548168.868504,
+  "echo_matches_an_earlier_command": true,
+  "loopback_ms": 1.026,
+  "stopped": null,
+  "note": "command = the raw bytes of the last record the fake Commander decoded; echo = the last loopback value the mission server decoded, re-encoded as the 8 bytes it arrived as"
+ }
+}

@@ -14,3 +14,10 @@ data/
 saved_data/
 runs/
 *.mp4
+# Python port
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+outputs/
+# Figure source data for the README is committed (upstream ignores data/)
+!docs/figures/data/

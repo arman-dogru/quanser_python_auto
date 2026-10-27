@@ -1,0 +1,1143 @@
+{
+ "model": "simulink/Mission_Server_QDrone_YOLO_Autonomous_Land.mdl",
+ "sha256": "49ac55dc9760476177bde9b555de42e975075f07b71a28b2bdc833b60a5e881e",
+ "solver": {
+  "config_sets": {
+   "simulink/configSet0.xml": {
+    "name": "Configuration",
+    "StartTime": "0.0",
+    "StopTime": "inf",
+    "FixedStep": "0.001",
+    "EnableMultiTasking": "on",
+    "SolverName": "ode2",
+    "SampleTimeConstraint": "Unconstrained",
+    "SystemTargetFile": "quarc_win64.tlc",
+    "ExtModeMexArgs": "'-w -d %d -uri %u -URI_Leader tcpip://localhost:18001 -URI_Follower tcpip://localhost:18002'"
+   },
+   "simulink/configSet1.xml": {
+    "name": "Configuration1",
+    "StartTime": "0.0",
+    "StopTime": "inf",
+    "FixedStep": "0.001",
+    "EnableMultiTasking": "on",
+    "SolverName": "ode2",
+    "SampleTimeConstraint": "Unconstrained",
+    "SystemTargetFile": "quarc_win64.tlc",
+    "ExtModeMexArgs": "'-w -d %d -uri %u -URI_Leader tcpip://localhost:18001 -URI_Follower tcpip://localhost:18002'"
+   },
+   "simulink/configSet2.xml": {
+    "name": "Configuration2",
+    "StartTime": "0.0",
+    "StopTime": "inf",
+    "FixedStep": "0.001",
+    "EnableMultiTasking": "on",
+    "SolverName": "ode2",
+    "SampleTimeConstraint": "Unconstrained",
+    "SystemTargetFile": "quarc_win64.tlc",
+    "ExtModeMexArgs": "'-w -d %d -uri %u -URI_Leader tcpip://localhost:18001 -URI_Follower tcpip://localhost:18002'"
+   },
+   "simulink/configSet3.xml": {
+    "name": "Configuration3",
+    "StartTime": "0.0",
+    "StopTime": "inf",
+    "FixedStep": "0.001",
+    "EnableMultiTasking": "on",
+    "SolverName": "ode2",
+    "SampleTimeConstraint": "Unconstrained",
+    "SystemTargetFile": "quarc_win64.tlc",
+    "ExtModeMexArgs": "'-w -d %d -uri %u -URI_Follower tcpip://localhost:18001'"
+   }
+  },
+  "active_config_set": {
+   "part": "simulink/configSet3.xml",
+   "name": "Configuration3"
+  }
+ },
+ "model_arguments": {
+  "URI_Leader": "tcpip://localhost:18001",
+  "URI_Follower": "tcpip://localhost:18001"
+ },
+ "endpoints": [
+  {
+   "block": "Communication - QDrone/Model Argument",
+   "param": "argument_name",
+   "model_argument": "URI_Follower",
+   "uri": "tcpip://localhost:18001",
+   "used": true,
+   "source": "ExtModeMexArgs"
+  },
+  {
+   "block": "Communication - QDrone/Stream Server",
+   "param": "uri",
+   "uri": "tcpip://localhost:18877",
+   "used": false,
+   "note": "uri_source = External input port; the dialog URI is ignored"
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Initialize",
+   "param": "uri",
+   "uri": "tcpip://localhost:18001",
+   "used": false,
+   "note": "uri_source = Use external mode communications; the dialog URI is ignored (connection rides on external mode)"
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Observation TCP Client",
+   "param": "uri",
+   "uri": "tcpip://localhost:18901",
+   "used": true
+  }
+ ],
+ "sample_times": [
+  {
+   "block": "Communication - QDrone/Detect Communication loss/Time",
+   "param": "sample_time",
+   "value": "qc_get_step_size"
+  },
+  {
+   "block": "Communication - QDrone/Stream Server",
+   "param": "sample_time",
+   "value": "qc_get_step_size"
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) /OptiTrack Trackables",
+   "param": "sample_time",
+   "value": "qc_get_step_size*10"
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller",
+   "param": "sample_time",
+   "value": "qc_get_step_size"
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Initialize",
+   "param": "sample_time",
+   "value": "qc_get_step_size"
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Time",
+   "param": "sample_time",
+   "value": "qc_get_step_size"
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Observation TCP Client",
+   "param": "sample_time",
+   "value": "qc_get_step_size"
+  }
+ ],
+ "constants": [
+  {
+   "block": "Communication - QDrone/Constant",
+   "value": "1",
+   "explicit": false
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Calculate Home Pose/Constant",
+   "value": "0",
+   "explicit": true
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Calculate Home Pose/Constant1",
+   "value": "1",
+   "explicit": false
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) /Convention Correction (Motive Frame to Research Studio Frame) - QDrone/Rotate Basis from  RSF to MF",
+   "value": "[0 -1 0;0 0 1;-1 0 0]",
+   "explicit": true
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Home height (m)",
+   "value": "0.70",
+   "explicit": true
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Constant",
+   "value": "-1*ones(1,6)",
+   "explicit": true
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Pulse Check/Pulse Check",
+   "value": "1",
+   "explicit": false
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Pulse Check/pulse count /Constant1",
+   "value": "0",
+   "explicit": true
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Triggered Subsystem/Constant",
+   "value": "1",
+   "explicit": false
+  },
+  {
+   "block": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Vehicle ID - QDrone",
+   "value": "1",
+   "explicit": false
+  }
+ ],
+ "charts": [
+  {
+   "member": "simulink/stateflow/chart_23.xml",
+   "chart_id": "23",
+   "instance_path": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager",
+   "function": "fcn",
+   "signature": "function [desiredPose,waypointIndex,gridComplete,visitedCount,centeringActive,centered,pixelError,descentStage,descentAbort] = fcn(measuredPose,homePose,triggers,confirmedPad,holdPose,padU,padV,newPadSample,isTracking)",
+   "data": [
+    {
+     "name": "measuredPose",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "desiredPose",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "homePose",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "triggers",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "waypointIndex",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "gridComplete",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "visitedCount",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "confirmedPad",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "holdPose",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "padU",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "padV",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "newPadSample",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "centeringActive",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "centered",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "pixelError",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "isTracking",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "descentStage",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "descentAbort",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "a852c04c7ded20bca20e068fcd62d02284c174fd023f938e547463df6fc3a69a",
+   "has_persistent_state": true,
+   "script_file": "Mission_Server_QDrone_YOLO_Autonomous_Land/charts/chart_23_Grid_Search_Manager.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_46.xml",
+   "chart_id": "46",
+   "instance_path": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone/Extract Object Data",
+   "function": "fcn",
+   "signature": "function [position, orientation, tracking] = fcn(data, index)",
+   "data": [
+    {
+     "name": "data",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "position",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "orientation",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "index",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "tracking",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "f053f8b1710897eb387f4b3c53c09510a0c3355445f918a647c3d57f5608dcc8",
+   "has_persistent_state": false,
+   "script_file": "Mission_Server_QDrone_YOLO_Autonomous_Land/charts/chart_46_Extract_Object_Data.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_56.xml",
+   "chart_id": "56",
+   "instance_path": "Communication - QDrone/Detect Communication loss/MATLAB Function",
+   "function": "fcn",
+   "signature": "function stream_connection_loss  = fcn(time, state, error)",
+   "data": [
+    {
+     "name": "time",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "stream_connection_loss",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "state",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "error",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "8720a71f35a8a7d4562d557e15720f8287a51e6997c3887401b0f94ce47191fa",
+   "has_persistent_state": false,
+   "script_file": "Mission_Server_QDrone_YOLO_Autonomous_Land/charts/chart_56_MATLAB_Function.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_65.xml",
+   "chart_id": "65",
+   "instance_path": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold",
+   "function": "fcn",
+   "signature": "function [confirmedPad,holdPose,confidence,padU,padV,newPadSample,visionAge] = fcn(measuredPose,vision,newVision,clockTime,triggers)",
+   "data": [
+    {
+     "name": "measuredPose",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "confirmedPad",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "vision",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "newVision",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "clockTime",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "triggers",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "holdPose",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "confidence",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "padU",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "padV",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "newPadSample",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "visionAge",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "0d1115eedac43602d42b3517557d70a56cda944e34765ce5f02b4bb82f0c9700",
+   "has_persistent_state": true,
+   "script_file": "Mission_Server_QDrone_YOLO_Autonomous_Land/charts/chart_65_YOLO_Confirmation_and_Hover_Hold.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_82.xml",
+   "chart_id": "82",
+   "instance_path": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate",
+   "function": "fcn",
+   "signature": "function [landingReady,freshCount,reasonCode] = fcn(descentStage,descentAbort,confirmedPad,centered,newPadSample,isTracking,measuredPose,desiredPose,clockTime)",
+   "data": [
+    {
+     "name": "descentStage",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "landingReady",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "descentAbort",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "confirmedPad",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "centered",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "newPadSample",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "isTracking",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "measuredPose",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "desiredPose",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "clockTime",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "freshCount",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "reasonCode",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "1ac32df8581a9d4fa14b4f0004c0c42641b2ab721d4bde9f35db434275777c51",
+   "has_persistent_state": true,
+   "script_file": "Mission_Server_QDrone_YOLO_Autonomous_Land/charts/chart_82_Landing_Readiness_Gate.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_99.xml",
+   "chart_id": "99",
+   "instance_path": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Diagnostic",
+   "function": "fcn",
+   "signature": "function [causeBits,ageAtAbort,timeAtAbort] = fcn(descentStage,descentAbort,confirmedPad,isTracking,measuredPose,visionAge,clockTime)",
+   "data": [
+    {
+     "name": "descentStage",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "causeBits",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "descentAbort",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "confirmedPad",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "isTracking",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "measuredPose",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "visionAge",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "clockTime",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "ageAtAbort",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "timeAtAbort",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "e3933728da468b26d197255057e13b3abbb1a6ee57b076e71a0e4543f79da9e2",
+   "has_persistent_state": true,
+   "script_file": "Mission_Server_QDrone_YOLO_Autonomous_Land/charts/chart_99_Abort_Diagnostic.m"
+  },
+  {
+   "member": "simulink/stateflow/chart_114.xml",
+   "chart_id": "114",
+   "instance_path": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Autonomous LAND Trigger Arbiter",
+   "function": "fcn",
+   "signature": "function [commanderTriggers,autoLandLatched] = fcn(operatorTriggers,landingReady)",
+   "data": [
+    {
+     "name": "operatorTriggers",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "commanderTriggers",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "landingReady",
+     "scope": "INPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    },
+    {
+     "name": "autoLandLatched",
+     "scope": "OUTPUT_DATA",
+     "dataType": "Inherit: Same as Simulink"
+    }
+   ],
+   "script_sha256": "63b60f527e91edfe9f1c3ae549e342582af462f3a5ad8824dbabaec72432e7ba",
+   "has_persistent_state": true,
+   "script_file": "Mission_Server_QDrone_YOLO_Autonomous_Land/charts/chart_114_Autonomous_LAND_Trigger_Arbiter.m"
+  }
+ ],
+ "stream_blocks": {
+  "Communication - QDrone/Stream Server": {
+   "Ports": "[3, 5]",
+   "SourceBlock": "quarc_library/Communications/Basic/Stream Server",
+   "active": "off",
+   "byte_order": "little endian (Intel - LSB first)",
+   "data_type": "Inherited via back propagation",
+   "default_value": "zeros(1,1)",
+   "implementation": "Use blocking I/O in a separate thread",
+   "max_dimensions": "-1",
+   "optimization": "Minimum latency",
+   "receive_buffer_size": "1460",
+   "receive_dimensions": "off",
+   "receive_fifo_size": "1000",
+   "receive_options": "Receive most recent data",
+   "receive_priority": "0",
+   "sample_time": "qc_get_step_size",
+   "send_buffer_size": "1460",
+   "send_dimensions": "off",
+   "send_fifo_size": "1000",
+   "send_options": "Send most recent data",
+   "send_priority": "0",
+   "type_expr": "BusObject",
+   "uri": "tcpip://localhost:18877",
+   "uri_source": "External input port"
+  },
+  "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) /OptiTrack Trackables": {
+   "Ports": "[0, 4]",
+   "SourceBlock": "quarc_library/Devices/Third-Party/NaturalPoint/OptiTrack/OptiTrack Trackables",
+   "active": "off",
+   "calibration_file": "C:\\Users\\user\\Documents\\OptiTrack\\Session 2026-09-15\\Calibration Exceptional (MeanErr 0.544 mm) 2026-09-15 10.cal",
+   "rigid_body_file": "C:\\Users\\user\\Documents\\OptiTrack\\Session 2026-09-15\\RigidBody 01.tra",
+   "rigid_body_ids": "1",
+   "sample_time": "qc_get_step_size*10"
+  },
+  "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller": {
+   "Ports": "[0, 10]",
+   "SourceBlock": "quarc_library/Devices/Peripherals/Host/Host Game Controller",
+   "auto_center": "off",
+   "buffer_size": "20",
+   "controller": "1",
+   "deadzone": "[]",
+   "debug_mode": "off",
+   "enabled": "on",
+   "object_name": "Host-1",
+   "sample_time": "qc_get_step_size",
+   "saturation": "[]"
+  },
+  "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Initialize": {
+   "Ports": "[0, 2]",
+   "SourceBlock": "quarc_library/Devices/Peripherals/Host/Host Initialize",
+   "active": "on",
+   "object_name": "Host-1",
+   "receive_buffer_size": "1000",
+   "run_client": "on",
+   "sample_time": "qc_get_step_size",
+   "send_buffer_size": "1000",
+   "thread_priority": "0",
+   "uri": "tcpip://localhost:18001",
+   "uri_source": "Use external mode communications",
+   "use_window": "off",
+   "window_position": "[]"
+  },
+  "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Observation TCP Client": {
+   "Ports": "[0, 4]",
+   "SourceBlock": "quarc_library/Communications/Basic/Stream Client",
+   "active": "off",
+   "byte_order": "little endian (Intel - LSB first)",
+   "data_type": "Inherited via back propagation",
+   "default_value": "[0 0 0 0 -1 0]",
+   "implementation": "Use blocking I/O in a separate thread",
+   "max_dimensions": "-1",
+   "optimization": "Minimum latency",
+   "receive_buffer_size": "1460",
+   "receive_dimensions": "off",
+   "receive_fifo_size": "1000",
+   "receive_options": "Receive most recent data",
+   "receive_priority": "0",
+   "sample_time": "qc_get_step_size",
+   "send_buffer_size": "1460",
+   "send_dimensions": "off",
+   "send_fifo_size": "1000",
+   "send_options": "Do not send data",
+   "send_priority": "0",
+   "type_expr": "BusObject",
+   "uri": "tcpip://localhost:18901",
+   "uri_source": "Specify via dialog (do not evaluate)"
+  }
+ },
+ "wiring": [
+  {
+   "system": "Communication - QDrone/Detect Communication loss",
+   "src": "Communication - QDrone/Detect Communication loss/Error#out:1",
+   "dst": "Communication - QDrone/Detect Communication loss/MATLAB Function#in:3"
+  },
+  {
+   "system": "Communication - QDrone/Detect Communication loss",
+   "src": "Communication - QDrone/Detect Communication loss/MATLAB Function#out:1",
+   "dst": "Communication - QDrone/Detect Communication loss/Threshold#in:1"
+  },
+  {
+   "system": "Communication - QDrone/Detect Communication loss",
+   "src": "Communication - QDrone/Detect Communication loss/State#out:1",
+   "dst": "Communication - QDrone/Detect Communication loss/MATLAB Function#in:2"
+  },
+  {
+   "system": "Communication - QDrone/Detect Communication loss",
+   "src": "Communication - QDrone/Detect Communication loss/Time#out:1",
+   "dst": "Communication - QDrone/Detect Communication loss/MATLAB Function#in:1"
+  },
+  {
+   "system": "Communication - QDrone",
+   "src": "Communication - QDrone/Constant#out:1",
+   "dst": "Communication - QDrone/Stream Server#in:2"
+  },
+  {
+   "system": "Communication - QDrone",
+   "src": "Communication - QDrone/Data In#out:1",
+   "dst": "Communication - QDrone/Stream Server#in:1"
+  },
+  {
+   "system": "Communication - QDrone",
+   "src": "Communication - QDrone/Stream Server#out:3",
+   "dst": "Communication - QDrone/Terminator2#in:1"
+  },
+  {
+   "system": "Communication - QDrone",
+   "src": "Communication - QDrone/Stream Server#out:5",
+   "dst": "Communication - QDrone/Terminator1#in:1"
+  },
+  {
+   "system": "Communication - QDrone",
+   "src": "Communication - QDrone/Model Argument#out:1",
+   "dst": "Communication - QDrone/Stream Server#in:3"
+  },
+  {
+   "system": "Communication - QDrone",
+   "src": "Communication - QDrone/Stream Server#out:4",
+   "dst": "Communication - QDrone/Timestamp Received (s)#in:1"
+  },
+  {
+   "system": "Communication - QDrone",
+   "src": "Communication - QDrone/Stream Server#out:1",
+   "dst": "Communication - QDrone/Detect Communication loss#in:1"
+  },
+  {
+   "system": "Communication - QDrone",
+   "src": "Communication - QDrone/Stream Server#out:2",
+   "dst": "Communication - QDrone/Detect Communication loss#in:2"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) ",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) /OptiTrack Trackables#out:2",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) /Terminator2#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) ",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) /OptiTrack Trackables#out:4",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) /Selector3#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) ",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) /OptiTrack Trackables#out:3",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) /Selector5#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) ",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) /OptiTrack Trackables#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Data Server (Localization) /Selector4#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone/Extract Object Data#out:2",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone/Reshape1#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone/Extract Object Data#out:3",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone/Reshape2#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone/Extract Object Data#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone/Reshape#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone/Optitrack Data#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone/Extract Object Data#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone/Vehicle ID#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Extract Vehicle Data - QDrone/Extract Object Data#in:2"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:10",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Terminator2#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Initialize#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Terminator4#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Initialize#out:2",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Terminator1#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:3",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/FrSKYMapping#in:2"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:2",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/FrSKYMapping#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:9",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/FrSKYMapping#in:8"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:9",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Mux#in:6"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:8",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/FrSKYMapping#in:7"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:8",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Mux#in:5"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:7",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/FrSKYMapping#in:6"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:7",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Mux#in:4"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:6",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/FrSKYMapping#in:5"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:6",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Mux#in:3"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:5",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/FrSKYMapping#in:4"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:5",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Mux#in:2"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:4",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/FrSKYMapping#in:3"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:4",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Mux#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Host Game Controller#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK/Pulse Check#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Measurement Conditioning#out:2",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#in:6"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Measurement Conditioning#out:2",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Diagnostic#in:4"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Measurement Conditioning#out:2",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#in:9"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Measurement Conditioning#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#in:7"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Measurement Conditioning#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Diagnostic#in:5"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Measurement Conditioning#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Measurement Conditioning#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Calculate Home Pose#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#in:2"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#in:5",
+   "name": "Triggers (Boolean)"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#in:3",
+   "name": "Triggers (Boolean)"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/JOYSTICK#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Autonomous LAND Trigger Arbiter#in:1",
+   "name": "Triggers (Boolean)"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Desired  Pose (m, rad) [4]#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#in:8"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:2",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Waypoint Index Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:3",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Complete Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:4",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Visited Waypoint Count Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Observation TCP Client#out:3",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#in:2"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Observation TCP Client#out:4",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#in:3"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Freshness Clock#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Diagnostic#in:7"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Freshness Clock#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#in:9"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Freshness Clock#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#in:4"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#in:3"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Diagnostic#in:3"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#in:4"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmed Hover Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#out:2",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#in:5"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#out:3",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confidence Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#out:4",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#in:6"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#out:5",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#in:7"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#out:6",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#in:8"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#out:6",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#in:5"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:5",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Centering Active Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:6",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Pad Centered Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:6",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#in:4"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:7",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Pixel Error Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:8",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:8",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Diagnostic#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:8",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Descent Stage Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:9",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Diagnostic#in:2"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:9",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#in:2"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Grid Search Manager#out:9",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Descent Abort Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Ready Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Autonomous LAND Trigger Arbiter#in:2"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#out:2",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Fresh Count Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Readiness Gate#out:3",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Landing Gate Reason Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#out:7",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Diagnostic#in:6"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/YOLO Confirmation and Hover Hold#out:7",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Current Vision Age Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Diagnostic#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Cause Bits Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Diagnostic#out:2",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Vision Age At Abort Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Diagnostic#out:3",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Abort Time Display#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Autonomous LAND Trigger Arbiter#out:1",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Triggers (0,1) [4]#in:1"
+  },
+  {
+   "system": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone",
+   "src": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Autonomous LAND Trigger Arbiter#out:2",
+   "dst": "MISSION SERVER - LEADER/FOLLOWER with QBot 2e and QDrone/Autonomous LAND Request Display#in:1"
+  }
+ ],
+ "counts": {
+  "blocks": 321,
+  "lines": 356
+ }
+}
